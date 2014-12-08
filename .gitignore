@@ -53,3 +53,7 @@ Temporary Items
 *.cpp~
 *.h~
 *.bat~
+*.swp
+code/out~
+code/out
+data/temp.tmp

@@ -4,9 +4,23 @@
 #define bool32 int32_t
 #define ARRAY_COUNT(array) (sizeof(array) / sizeof(array[0]))
 
-#define GIGABYTES(gb) (1024*1024*1024*gb)
-#define MEGABYTES(mb) (1024*1024*mb)
-#define KILOBYTES(kb) (1024*kb)
+#define TERABYTES(tb) ((uint64_t)1024*1024*1024*1024*tb)
+#define GIGABYTES(gb) ((uint64_t)1024*1024*1024*gb)
+#define MEGABYTES(mb) ((uint64_t)1024*1024*mb)
+#define KILOBYTES(kb) ((uint64_t)1024*kb)
+
+#ifdef DEBUG_MODE
+#define ASSERT(expression)  \
+    if (!(expression)) {*(int*)0 = 0;}
+#else
+#define ASSERT(expression)  
+#endif
+
+inline uint32_t safeTruncateUint64 (uint64_t value) {
+    ASSERT(value<= 0xFFFFFFFF);
+    uint32_t result = (uint32_t) value;
+    return result;
+}
 
 //these two fields define a bitmap memory area (dib) for windows
 struct FrameBuffer {
@@ -60,8 +74,12 @@ struct GameInput {
 
 struct GameMemory{
     bool32 isInitialized;
-    uint64_t permanentStorageSpace;
+
+    uint64_t permanentStorageSize;
     void *permanentStorage;
+
+    uint64_t transientStorageSize;
+    void *transientStorage;
 };
 
 struct GameState {
@@ -71,9 +89,10 @@ struct GameState {
 };
 
     
+
 static void RenderWeirdGradient(FrameBuffer *buffer,int offsetX,int offsetY);
 
-static void GameUpdateAndRender(FrameBuffer *buffer, SoundBuffer *soundBuffer,GameInput *gameInput);
+static void GameUpdateAndRender(GameMemory *gameMemory,FrameBuffer *buffer, SoundBuffer *soundBuffer,GameInput *gameInput);
 
 #define HANDMADE_H
 #endif

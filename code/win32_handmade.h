@@ -1,5 +1,7 @@
 #ifndef W32HANDMADE_H
 #define W32HANDMADE_H 
+
+
 struct win32offscreenBuffer {
     BITMAPINFO info;
     void *bitmapMemory;
@@ -23,4 +25,15 @@ struct win32_soundOutput {
     int sampleLatency;
     float tSine;
 };
+
+#ifdef DEBUG_MODE 
+struct debugReadFileResult {
+    uint32_t contentSize;
+    void *fileContent;
+};
+debugReadFileResult DEBUGplatformReadEntireFile(char *filename);
+bool32 DEBUGplatformWriteEntireFile(char *filename, uint32_t memorySize, void *memory);
+void DEBUGplatformFreeFileMemory(void *memory);
+#endif 
+
 #endif
