@@ -31,9 +31,9 @@ struct debugReadFileResult {
     uint32_t contentSize;
     void *fileContent;
 };
-debugReadFileResult DEBUGplatformReadEntireFile(char *filename);
-bool32 DEBUGplatformWriteEntireFile(char *filename, uint32_t memorySize, void *memory);
-void DEBUGplatformFreeFileMemory(void *memory);
+static debugReadFileResult DEBUGplatformReadEntireFile(char *filename);
+static bool32 DEBUGplatformWriteEntireFile(char *filename, uint32_t memorySize, void *memory);
+static void DEBUGplatformFreeFileMemory(void *memory);
 #endif 
 
 #endif

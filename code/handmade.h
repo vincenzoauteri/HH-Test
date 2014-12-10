@@ -44,24 +44,25 @@ struct GameButtonState {
 };
 
 
-struct Input{
+struct GameControllerInput{
     bool32 isAnalog;
-    float startX;
-    float startY;
-    float endX;
-    float endY;
-    float minX;
-    float minY;
-    float maxX;
-    float maxY;
+    bool32 isConnected;
+    float stickAverageX;
+    float stickAverageY;
 
     union {
-        GameButtonState buttons[6];
+        GameButtonState buttons[10];
         struct {
-            GameButtonState up;
-            GameButtonState down;
-            GameButtonState left;
-            GameButtonState right;
+            GameButtonState moveUp;
+            GameButtonState moveDown;
+            GameButtonState moveLeft;
+            GameButtonState moveRight;
+
+            GameButtonState actionUp;
+            GameButtonState actionDown;
+            GameButtonState actionLeft;
+            GameButtonState actionRight;
+
             GameButtonState leftShoulder;
             GameButtonState rightShoulder;
         };
@@ -69,8 +70,9 @@ struct Input{
 };
 
 struct GameInput {
-    Input controllers[4];
+    GameControllerInput controllers[5];
 };
+
 
 struct GameMemory{
     bool32 isInitialized;
@@ -88,6 +90,11 @@ struct GameState {
       int offsetY;
 };
 
+inline GameControllerInput *getController(GameInput *input, int controllerIndex){
+    ASSERT(controllerIndex < ARRAY_COUNT(input->controllers));
+    GameControllerInput *gameControllerInput = &input->controllers[controllerIndex];
+    return gameControllerInput;
+}
     
 
 static void RenderWeirdGradient(FrameBuffer *buffer,int offsetX,int offsetY);

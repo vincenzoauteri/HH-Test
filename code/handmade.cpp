@@ -17,9 +17,10 @@ static void RenderWeirdGradient(FrameBuffer *buffer,int xOffset,int yOffset)
 
         uint32_t *pixel =(uint32_t *) row;
 
-        const int RED = 16;
+        //const int RED = 16;
         const int GREEN = 8;
-        const int BLUE= 0;
+        //const int BLUE= 0;
+
 
         for (int x = 0;
                 x< buffer->width;
@@ -27,8 +28,8 @@ static void RenderWeirdGradient(FrameBuffer *buffer,int xOffset,int yOffset)
             /*
              * Pixel in memory RR GG BB 00 
              *                 */
-            uint8_t blueValue = (x+xOffset);
-            uint8_t greenValue = (y+yOffset);
+            uint8_t blueValue = (uint8_t)(x+xOffset);
+            uint8_t greenValue = (uint8_t)(y+yOffset);
 
             //*pixel++ = ((uint32_t)(greenValue) << GREEN) | ((uint32_t) (blueValue));
             *pixel++ = ((uint32_t) (greenValue) << GREEN)  | ((uint32_t) blueValue);
@@ -71,7 +72,7 @@ static void GameUpdateAndRender(GameMemory *gameMemory, FrameBuffer *frameBuffer
         GameInput *gameInput)
 {
     GameState *gameState = (GameState *)gameMemory->permanentStorage;
-	
+
     ASSERT (sizeof(*gameState) <= gameMemory->permanentStorageSize);
 
     if (!gameMemory->isInitialized){
@@ -93,18 +94,27 @@ static void GameUpdateAndRender(GameMemory *gameMemory, FrameBuffer *frameBuffer
         gameMemory->isInitialized = true;
     }
 
-    Input *player1Input= &gameInput->controllers[0];
-    if (player1Input->isAnalog) {
-        gameState->toneHz = 256 + (int)(128.0f * (player1Input->endX));
-        gameState->offsetX = (int) 100.0f*(player1Input->endX);
-        gameState->offsetY = (int) 100.0f*(player1Input->endY);
-    } else {
-    }
+    for (int controllerIndex=0;
+            controllerIndex < ARRAY_COUNT(gameInput->controllers);
+            controllerIndex++){
 
-    if( player1Input->down.endedDown) {
-        gameState->offsetX +=1;
-    }
+        GameControllerInput *controller = getController(gameInput,controllerIndex);
+        if (controller->isAnalog) {
+            gameState->toneHz = 256 + (int)(128.0f * (controller->stickAverageX));
+            gameState->offsetX = (int) (100.0f*(controller->stickAverageX));
+            gameState->offsetY = (int) (100.0f*(controller->stickAverageY));
+        } else  {
+            if (controller->moveLeft.endedDown){
+                gameState->offsetX +=1;
+                        OutputDebugStringA("move Lef\n");
+            }
+            if (controller->moveRight.endedDown){
+                gameState->offsetX -=1;
+                        OutputDebugStringA("move Rif\n");
+            }
+        }
 
+    }
 
 
     GameOutputSound( soundBuffer,gameState->toneHz);
