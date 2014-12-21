@@ -1,5 +1,10 @@
 #ifndef HANDMADE_H
 
+#include <stdint.h>
+#include <stdio.h>
+#include <math.h>
+#include <assert.h>
+
 //bool32 behaves like in C not like bool in C++:
 #define bool32 int32_t
 #define ARRAY_COUNT(array) (sizeof(array) / sizeof(array[0]))
@@ -16,7 +21,29 @@
 #define ASSERT(expression)  
 #endif
 
-inline uint32_t safeTruncateUint64 (uint64_t value) {
+struct ThreadContext{ 
+    int placeHolder;
+};
+
+struct debugReadFileResult {
+    uint32_t contentSize;
+    void *fileContent;
+};
+
+#define DEBUG_READ_ENTIRE_FILE(name) debugReadFileResult name(ThreadContext *context,char *filename)
+typedef DEBUG_READ_ENTIRE_FILE(debug_read_entire_file);
+DEBUG_READ_ENTIRE_FILE(DEBUGReadEntireFile);
+
+#define DEBUG_WRITE_ENTIRE_FILE(name) bool32 name(ThreadContext *context,char *filename, \
+        uint32_t memorySize, void *memory)
+typedef DEBUG_WRITE_ENTIRE_FILE(debug_write_entire_file);
+DEBUG_WRITE_ENTIRE_FILE(DEBUGWriteEntireFile);
+
+#define DEBUG_FREE_FILE_MEMORY(name) void name(ThreadContext *context,void *memory)
+typedef DEBUG_FREE_FILE_MEMORY(debug_free_file_memory);
+DEBUG_FREE_FILE_MEMORY(DEBUGFreeFileMemory);
+
+inline int32_t safeTruncateUint64(uint64_t value) {
     ASSERT(value<= 0xFFFFFFFF);
     uint32_t result = (uint32_t) value;
     return result;
@@ -25,6 +52,7 @@ inline uint32_t safeTruncateUint64 (uint64_t value) {
 //these two fields define a bitmap memory area (dib) for windows
 struct FrameBuffer {
     void *bitmapMemory;
+    int bytesPerPixel; 
     int width; 
     int height; 
     int pitch;  
@@ -70,6 +98,10 @@ struct GameControllerInput{
 };
 
 struct GameInput {
+    GameButtonState mouseButtons[5];
+    int32_t mouseX;
+    int32_t mouseY;
+    int32_t mouseZ;
     GameControllerInput controllers[5];
 };
 
@@ -82,12 +114,19 @@ struct GameMemory{
 
     uint64_t transientStorageSize;
     void *transientStorage;
+    debug_read_entire_file *DEBUGReadEntireFile;
+    debug_write_entire_file *DEBUGWriteEntireFile;
+    debug_free_file_memory *DEBUGFreeFileMemory;
 };
 
 struct GameState {
       int toneHz;
+      float tSine;
       int offsetX;
       int offsetY;
+      int playerX;
+      int playerY;
+      float tJumpTimer;
 };
 
 inline GameControllerInput *getController(GameInput *input, int controllerIndex){
@@ -97,9 +136,18 @@ inline GameControllerInput *getController(GameInput *input, int controllerIndex)
 }
     
 
-static void RenderWeirdGradient(FrameBuffer *buffer,int offsetX,int offsetY);
+void RenderWeirdGradient(FrameBuffer *buffer,int offsetX,int offsetY);
 
-static void GameUpdateAndRender(GameMemory *gameMemory,FrameBuffer *buffer, SoundBuffer *soundBuffer,GameInput *gameInput);
+#define GAME_UPDATE_AND_RENDER(name) void name(ThreadContext *context,GameMemory *gameMemory,FrameBuffer *buffer ,GameInput *gameInput)
+typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
+//Function stubs
+
+
+#define GAME_GET_SOUND_SAMPLES(name) void name(ThreadContext *context,GameMemory *gameMemory, SoundBuffer *soundBuffer)
+typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
+//Function stubs
+
+
 
 #define HANDMADE_H
 #endif

@@ -57,3 +57,9 @@ Temporary Items
 code/out~
 code/out
 data/temp.tmp
+build/handmade.exp
+*.lib
+*.dll
+*.hmi
+*.idb
+*.map
