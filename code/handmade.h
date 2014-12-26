@@ -99,12 +99,23 @@ struct GameControllerInput{
 
 struct GameInput {
     GameButtonState mouseButtons[5];
+    float dtForFrame;
     int32_t mouseX;
     int32_t mouseY;
     int32_t mouseZ;
     GameControllerInput controllers[5];
 };
 
+struct TileMap {
+  int countX;
+  int countY;
+  float upperLeftX = -30.0f;
+  float upperLeftY = 0.0f;
+
+  float tileWidth= 60.f;
+  float tileHeight= 60.f;
+  uint32_t  *tiles;
+};
 
 struct GameMemory{
     bool32 isInitialized;
@@ -120,13 +131,8 @@ struct GameMemory{
 };
 
 struct GameState {
-      int toneHz;
-      float tSine;
-      int offsetX;
-      int offsetY;
-      int playerX;
-      int playerY;
-      float tJumpTimer;
+  float playerX;
+  float playerY;
 };
 
 inline GameControllerInput *getController(GameInput *input, int controllerIndex){
