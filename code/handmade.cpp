@@ -166,6 +166,13 @@ inline int32_t roundFloatToInt(float floatNumber)
     return result;
 }
 
+#include <math.h>
+inline int32_t floorFloatToInt(float floatNumber) 
+{
+    int32_t result = (int32_t)floorf(floatNumber);
+    return result;
+}
+
 inline int32_t truncateFloatToInt(float floatNumber) 
 {
     int32_t result = (int32_t) (floatNumber);
@@ -218,35 +225,107 @@ static void drawRect(FrameBuffer *buffer,
     }
 }
 
-inline uint32_t getTileValue(TileMap *tileMap,
+inline uint32_t getTileValue(World *world,
+        TileMap *tileMap,
         uint32_t tileX,
         uint32_t tileY)
 {
     uint32_t result = 
         *(uint32_t *)(tileMap->tiles + 
-                (tileMap->countX*tileY+ tileX));
+                (world->countX*tileY+ tileX));
     return result ;
 }
 
-static bool32 isMapTileEmpty(TileMap *tileMap, 
-        float newPlayerX, 
-        float newPlayerY)
+
+static bool32 isTileInMapEmpty(World *world,
+        TileMap *tileMap, 
+        int32_t tileX, 
+        int32_t tileY)
 {
-
-    int32_t playerTileX = 
-        truncateFloatToInt((newPlayerX - tileMap->upperLeftX)/
-                tileMap->tileWidth);
-    int32_t playerTileY = 
-        truncateFloatToInt((newPlayerY- tileMap->upperLeftY)/
-                tileMap->tileHeight);
-
     bool32 result= false;
 
-    if (playerTileX <= tileMap->countX && playerTileX >=0 &&
-            playerTileY <= tileMap->countY && playerTileY >=0){
-        result = (getTileValue(tileMap,playerTileX,playerTileY) == 0);
+    if (tileX<= world->countX && tileY>=0 &&
+            tileY<= world->countY && tileY>=0) {
+        result = (getTileValue(world,tileMap,tileX,tileY) == 0);
+    }
+
+    return result;
+}
+
+
+inline TileMap* getTileMapInWorld(World *world,
+        int32_t tileX,
+        int32_t tileY)
+{
+    TileMap *result = 0; 
+
+    if (tileX >=0 && tileX < world->countX &&
+            tileY>=0 && tileY < world->countY){
+        result = &world->tileMaps[world->worldCountX*tileY+ tileX];
+    }
+    return result ;
+}
+
+inline WorldLocation getWorldLocation (World *world, RawLocation pos) 
+{
+    WorldLocation result;
+    // Get to which tile in the current tile map would end the player
+    // being with the current movement
+    result.tileMapX = pos.tileMapX; 
+    result.tileMapY = pos.tileMapY; 
+
+    float X = pos.X -world->upperLeftX;
+    float Y = pos.Y -world->upperLeftY;
+
+    result.tileX = 
+        floorFloatToInt((X)/
+                world->tileWidth);
+    result.tileY= 
+        floorFloatToInt((Y)/
+                world->tileHeight);
+
+    result.X = X - result.tileX*world->tileWidth;
+    result.Y = Y - result.tileY*world->tileHeight;
+    //Check if the test tile is still inside the current tile map 
+    //If not, change the coordinates so that it rolls over 
+    //Also, update what the current tile map in the world would be
+    if (result.tileX < 0) {
+        result.tileX= world->countX + result.tileX;
+        --result.tileMapX;
+    } else  if (result.tileX >= world->countX) {
+        result.tileX= world->countX - world->countX;
+        ++result.tileMapX;
+    }
+    if (result.tileY < 0) {
+        result.tileY = world->countY + result.tileY ;
+        --result.tileMapY;
+    } else if (result.tileY >= world->countY) {
+        result.tileY = world->countY - world->countY;
+        ++result.tileMapY;
     }
     return result;
+}
+
+static bool32 isWorldTileMapEmpty(World *world, 
+        RawLocation rawPos)
+{
+    bool32 empty = false;
+
+    WorldLocation worldPos = getWorldLocation(world,rawPos); 
+
+    //Check if there is a defined tile map for the new world coordinates
+    TileMap *tileMap = getTileMapInWorld(world,
+            worldPos.tileMapX,
+            worldPos.tileMapY);
+    //Then checks if the tile in the tile map is empty (passage)
+    if (tileMap) {
+        empty = isTileInMapEmpty(world,
+                tileMap,
+                worldPos.tileX,
+                worldPos.tileY);
+    }
+
+    return empty;
 }
 
 extern "C" GAME_UPDATE_AND_RENDER(gameUpdateAndRender) 
@@ -257,55 +336,90 @@ extern "C" GAME_UPDATE_AND_RENDER(gameUpdateAndRender)
     const int MAP_WIDTH = 17;
     const int MAP_HEIGHT= 9;
 
-    TileMap tileMap[2];
+    TileMap tileMap[2][2]; 
 
-    uint32_t tiles0[MAP_HEIGHT][MAP_WIDTH] =  
+    uint32_t tiles00[MAP_HEIGHT][MAP_WIDTH] =  
     {
         {1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1,1},
         {1,0,0,1, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
         {1,0,0,1, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
         {1,0,1,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
-        {1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0,1},
+        {1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0,0},
         {1,0,0,0, 0,0,1,0, 0,0,0,0, 0,0,0,0,1},
         {1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,1,0,1},
         {1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0,1},
         {1,1,1,1, 1,1,1,1, 0,1,1,1, 1,1,1,1,1}
     };
-    uint32_t tiles1[MAP_HEIGHT][MAP_WIDTH] =  
+     uint32_t tiles01[MAP_HEIGHT][MAP_WIDTH] =  
+    {
+        {1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1,1},
+        {1,0,0,1, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
+        {1,0,0,1, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
+        {1,0,1,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
+        {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0,1},
+        {1,0,0,0, 0,0,1,0, 0,0,0,0, 0,0,0,0,1},
+        {1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,1,0,1},
+        {1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0,1},
+        {1,1,1,1, 1,1,1,1, 0,1,1,1, 1,1,1,1,1}
+    };
+    uint32_t tiles10[MAP_HEIGHT][MAP_WIDTH] =  
     {
         {1,1,1,1, 1,1,1,1, 0,1,1,1, 1,1,1,1,1},
-        {1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
-        {1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
-        {1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
-        {1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
-        {1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
-        {1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
-        {1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
+        {1,0,0,1, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
+        {1,0,0,1, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
+        {1,0,1,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
+        {1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0,0},
+        {1,0,0,0, 0,0,1,0, 0,0,0,0, 0,0,0,0,1},
+        {1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,1,0,1},
+        {1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0,1},
+        {1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1,1}
+    };
+    uint32_t tiles11[MAP_HEIGHT][MAP_WIDTH] =  
+    {
+        {1,1,1,1, 1,1,1,1, 0,1,1,1, 1,1,1,1,1},
+        {1,0,0,1, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
+        {1,0,0,1, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
+        {1,0,1,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,1},
+        {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0,1},
+        {1,0,0,0, 0,0,1,0, 0,0,0,0, 0,0,0,0,1},
+        {1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,1,0,1},
+        {1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0,1},
         {1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1,1}
     };
 
-    tileMap[0].countX = MAP_WIDTH;
-    tileMap[0].countY = MAP_HEIGHT;
-    tileMap[0].tileWidth = 60.0f;
-    tileMap[0].tileHeight= 60.0f;
-    tileMap[0].upperLeftX= -30.0f;
-    tileMap[0].upperLeftY= 0.0f;
+    tileMap[0][0].tiles = (uint32_t *)tiles00;
+    tileMap[0][1].tiles = (uint32_t *)tiles01;
+    tileMap[1][0].tiles = (uint32_t *)tiles10;
+    tileMap[1][1].tiles = (uint32_t *)tiles11;
 
-
-    tileMap[0].tiles = (uint32_t *)tiles0;
-    tileMap[1] = tileMap[0];
-    tileMap[1].tiles = (uint32_t *)tiles1;
-
-    TileMap *currentTileMap = &tileMap[0];
+    World world;
+    world.worldCountX = 2;
+    world.worldCountY = 2;
+    world.tileMaps = (TileMap *) tileMap;
+    world.countX = MAP_WIDTH;
+    world.countY = MAP_HEIGHT;
+    world.tileWidth = 60.0f;
+    world.tileHeight= 60.0f;
+    world.upperLeftX= 0.0f;
+    world.upperLeftY= 0.0f;
 
 
     if (!gameMemory->isInitialized){
-
-        gameState->playerX=100.0f;
-        gameState->playerY=150.0f;;
+ 
+        gameState->playerTileMapX = 0;
+        gameState->playerTileMapY = 0;
+        gameState->playerX= (world.tileWidth*(float)world.countX)/ 2.0f;
+        gameState->playerY= (world.tileHeight*(float)world.countY)/ 2.0f;
         gameMemory->isInitialized = true;
     }
 
+    TileMap *currentTileMap 
+        = getTileMapInWorld(&world,
+                gameState->playerTileMapX,gameState->playerTileMapY);
+
+    ASSERT(currentTileMap);
+    float playerWidth = 0.75f*world.tileWidth;
+    float playerHeight= world.tileHeight;
     for (int controllerIndex=0;
             controllerIndex < ARRAY_COUNT(gameInput->controllers);
             controllerIndex++){
@@ -314,51 +428,78 @@ extern "C" GAME_UPDATE_AND_RENDER(gameUpdateAndRender)
             getController(gameInput,controllerIndex);
         if (controller->isAnalog) {
         } else  {
-            float dPlayerY = 0;
-            float dPlayerX = 0;
+            float dPlayerY = 0.0f;
+            float dPlayerX = 0.0f;
             if (controller->moveUp.endedDown) {
-                dPlayerY = -128.0f;
+                dPlayerY = -1.0f;
             }
             if (controller->moveDown.endedDown) {
-                dPlayerY = 128.0f;
+                dPlayerY = 1.0f;
             }
             if (controller->moveLeft.endedDown) {
-                dPlayerX = -128.0f;
+                dPlayerX = -1.0f;
             }
             if (controller->moveRight.endedDown) {
-                dPlayerX = 128.0f;
+                dPlayerX = 1.0f;
             }                                     
-            float newPlayerX = gameState->playerX +  gameInput->dtForFrame*dPlayerX;
-            float newPlayerY = gameState->playerY +  gameInput->dtForFrame*dPlayerY;
-            if (isMapTileEmpty(currentTileMap,newPlayerX,newPlayerY)) {
-                gameState->playerX +=  gameInput->dtForFrame*dPlayerX;
-                gameState->playerY +=  gameInput->dtForFrame*dPlayerY;
+            dPlayerX *= 128.0f;
+            dPlayerY *= 128.0f;
+
+            float newPlayerX = gameState->playerX +  
+                gameInput->dtForFrame*dPlayerX;
+            float newPlayerY = gameState->playerY +  
+                gameInput->dtForFrame*dPlayerY;
+
+            RawLocation playerCenter= { gameState->playerTileMapX,
+            gameState->playerTileMapY,
+            newPlayerX,
+            newPlayerY};
+
+            RawLocation playerLeft = playerCenter; 
+            playerLeft.X-= 0.5f*playerWidth;
+            RawLocation playerRight = playerCenter; 
+            playerRight.X+= 0.5f*playerWidth;
+            
+
+            //Checks lower-left, lower-center and lower-right corners of 
+            //the sprite for collisions
+            if (isWorldTileMapEmpty(&world,playerCenter) && 
+                    isWorldTileMapEmpty(&world,playerLeft) && 
+                    isWorldTileMapEmpty(&world,playerRight)) {
+                WorldLocation newPos = getWorldLocation(&world,playerCenter); 
+                gameState->playerTileMapX= newPos.tileMapX;
+                gameState->playerTileMapY= newPos.tileMapY;
+
+                gameState->playerX =  world.upperLeftX + 
+                    world.tileWidth*newPos.tileX + 
+                    newPos.X;
+                gameState->playerY =  world.upperLeftY + 
+                    world.tileWidth*newPos.tileY + 
+                    newPos.Y;
+
             } else {
-                gameState->playerX = gameState->playerX;
-                gameState->playerY = gameState->playerY;
             }
         }
 
 
-        drawRect(buffer,-10.0f,-10.0f,(float)buffer->width+10.0f
-                ,(float)buffer->height+10.0f,0.5f,0.0f,0);
-        for (int row=0; row<MAP_HEIGHT;++row) {
-            for (int column=0;column<MAP_WIDTH;++column){
-                float gray = (getTileValue (currentTileMap,column,row) == 1) ? 0.5f : 1.0f ;
-                float minX = currentTileMap->upperLeftX + 
-                    ((float)column)*currentTileMap->tileWidth; 
-                float minY= currentTileMap->upperLeftY + 
-                    ((float)row)*currentTileMap->tileHeight; 
-                float maxX=  minX + currentTileMap->tileWidth; 
-                float maxY=  minY + currentTileMap->tileHeight; 
+        drawRect(buffer,0.0f,0.0f,(float)buffer->width
+                ,(float)buffer->height,1.0f,0.0f,0.1f);
+        for (int row=0; row<world.countY;++row) {
+            for (int column=0;column<world.countX;++column){
+                float gray = (getTileValue (&world,currentTileMap,column,row) == 1) 
+                    ? 1.0f : 0.5f ;
+                float minX = world.upperLeftX + 
+                    ((float)column)*world.tileWidth; 
+                float minY=world.upperLeftY + 
+                    ((float)row)*world.tileHeight; 
+                float maxX=  minX + world.tileWidth; 
+                float maxY=  minY + world.tileHeight; 
 
                 drawRect(buffer,minX,minY,maxX,maxY,gray,gray,gray);
             }
             float playerR = 1.0f;
             float playerG = 1.0f;
             float playerB = 0.0f;
-            float playerWidth = 0.75f*currentTileMap->tileWidth;
-            float playerHeight= currentTileMap->tileHeight;
             float playerLeft =  gameState->playerX - 0.5f*playerWidth;
             float playerTop = gameState->playerY - playerHeight;
 

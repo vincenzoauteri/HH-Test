@@ -975,8 +975,8 @@ int CALLBACK WinMain(
 
     WNDCLASS WindowClass =  {}; 
 
-    const int WINDOW_WIDTH = 960;
-    const int WINDOW_HEIGHT = 540;
+    const int WINDOW_WIDTH = 1270 ;
+    const int WINDOW_HEIGHT = 800;
     Win32ResizeDIBSection(&g_frameBuffer,WINDOW_WIDTH,WINDOW_HEIGHT);
 
 
@@ -1000,7 +1000,8 @@ int CALLBACK WinMain(
 
 
         HWND hwnd= CreateWindowEx (
-                WS_EX_TOPMOST | WS_EX_LAYERED,
+                //WS_EX_TOPMOST | 
+                WS_EX_LAYERED,
                 WindowClass.lpszClassName,
                 "Handmade Hero",
                 WS_OVERLAPPEDWINDOW | WS_VISIBLE,

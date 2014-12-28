@@ -67,8 +67,8 @@ struct SoundBuffer{
 };
 
 struct GameButtonState {
-   int halfTransitionCount; 
-   bool32 endedDown;
+    int halfTransitionCount; 
+    bool32 endedDown;
 };
 
 
@@ -107,16 +107,38 @@ struct GameInput {
 };
 
 struct TileMap {
-  int countX;
-  int countY;
-  float upperLeftX = -30.0f;
-  float upperLeftY = 0.0f;
-
-  float tileWidth= 60.f;
-  float tileHeight= 60.f;
-  uint32_t  *tiles;
+    uint32_t  *tiles;
 };
 
+struct WorldLocation {
+    int32_t tileMapX; 
+    int32_t tileMapY;
+    int32_t tileX;
+    int32_t tileY;
+    //coordinates relative to the tile
+    float X;
+    float Y;
+};
+
+struct RawLocation{
+    int32_t tileMapX; 
+    int32_t tileMapY;
+    //coordinates relative to the tile map 
+    float X;
+    float Y;
+};
+struct World {
+    int worldCountX;
+    int worldCountY;
+    int countX;
+    int countY;
+    float upperLeftX ;
+    float upperLeftY ;
+
+    float tileWidth;
+    float tileHeight;
+    TileMap *tileMaps;
+};
 struct GameMemory{
     bool32 isInitialized;
 
@@ -131,8 +153,10 @@ struct GameMemory{
 };
 
 struct GameState {
-  float playerX;
-  float playerY;
+    int32_t playerTileMapX;
+    int32_t playerTileMapY;
+    float playerX;
+    float playerY;
 };
 
 inline GameControllerInput *getController(GameInput *input, int controllerIndex){
@@ -140,7 +164,7 @@ inline GameControllerInput *getController(GameInput *input, int controllerIndex)
     GameControllerInput *gameControllerInput = &input->controllers[controllerIndex];
     return gameControllerInput;
 }
-    
+
 
 void RenderWeirdGradient(FrameBuffer *buffer,int offsetX,int offsetY);
 
