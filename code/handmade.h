@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <assert.h>
+#include "handmade_tilemap.h"
 
 //bool32 behaves like in C not like bool in C++:
 #define bool32 int32_t
@@ -20,6 +21,7 @@
 #else
 #define ASSERT(expression)  
 #endif
+
 
 struct ThreadContext{ 
     int placeHolder;
@@ -106,39 +108,6 @@ struct GameInput {
     GameControllerInput controllers[5];
 };
 
-struct TileMap {
-    uint32_t  *tiles;
-};
-
-struct WorldLocation {
-    int32_t tileMapX; 
-    int32_t tileMapY;
-    int32_t tileX;
-    int32_t tileY;
-    //coordinates relative to the tile
-    float X;
-    float Y;
-};
-
-struct RawLocation{
-    int32_t tileMapX; 
-    int32_t tileMapY;
-    //coordinates relative to the tile map 
-    float X;
-    float Y;
-};
-struct World {
-    int worldCountX;
-    int worldCountY;
-    int countX;
-    int countY;
-    float upperLeftX ;
-    float upperLeftY ;
-
-    float tileWidth;
-    float tileHeight;
-    TileMap *tileMaps;
-};
 struct GameMemory{
     bool32 isInitialized;
 
@@ -152,12 +121,6 @@ struct GameMemory{
     debug_free_file_memory *DEBUGFreeFileMemory;
 };
 
-struct GameState {
-    int32_t playerTileMapX;
-    int32_t playerTileMapY;
-    float playerX;
-    float playerY;
-};
 
 inline GameControllerInput *getController(GameInput *input, int controllerIndex){
     ASSERT(controllerIndex < ARRAY_COUNT(input->controllers));
@@ -177,7 +140,32 @@ typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
 //Function stubs
 
+struct MemoryArena {
+    size_t size ;
+    uint8_t *base;
+    size_t used;
+};
 
+struct World {
+    TileMap *tileMap;
+};
+
+struct GameState {
+    MemoryArena worldArena;
+    World *world;
+    TileMapPosition playerP;
+};
+
+#define pushStruct(arena, type) (type *)pushSize_(arena,sizeof(type))
+#define pushArray(arena, count, type) \
+    (type *)pushSize_(arena,(count)*sizeof(type))
+void *pushSize_(MemoryArena *arena, size_t size) 
+{
+    ASSERT((arena->used + size) <= arena->size );
+    void *result = arena->base + arena->used;
+    arena->used += size;
+    return result;
+}
 
 #define HANDMADE_H
 #endif

@@ -1094,7 +1094,7 @@ int CALLBACK WinMain(
                 gameMemory.permanentStorageSize ;
             gameMemory.isInitialized = false;
 
-            for (int replayIndex =0; 
+            for (int replayIndex =1; 
                     replayIndex < ARRAY_COUNT(state.replayBuffers);
                     replayIndex++){
                 win32_ReplayBuffer *replayBuffer = 
