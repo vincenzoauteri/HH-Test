@@ -1,13 +1,11 @@
 #ifndef HANDMADE_H
 
-#include <stdint.h>
+#include "handmade_platform.h"
 #include <stdio.h>
 #include <math.h>
 #include <assert.h>
 #include "handmade_tilemap.h"
 
-//bool32 behaves like in C not like bool in C++:
-#define bool32 int32_t
 #define ARRAY_COUNT(array) (sizeof(array) / sizeof(array[0]))
 
 #define TERABYTES(tb) ((uint64_t)1024*1024*1024*1024*tb)
@@ -22,28 +20,6 @@
 #define ASSERT(expression)  
 #endif
 
-
-struct ThreadContext{ 
-    int placeHolder;
-};
-
-struct debugReadFileResult {
-    uint32_t contentSize;
-    void *fileContent;
-};
-
-#define DEBUG_READ_ENTIRE_FILE(name) debugReadFileResult name(ThreadContext *context,char *filename)
-typedef DEBUG_READ_ENTIRE_FILE(debug_read_entire_file);
-DEBUG_READ_ENTIRE_FILE(DEBUGReadEntireFile);
-
-#define DEBUG_WRITE_ENTIRE_FILE(name) bool32 name(ThreadContext *context,char *filename, \
-        uint32_t memorySize, void *memory)
-typedef DEBUG_WRITE_ENTIRE_FILE(debug_write_entire_file);
-DEBUG_WRITE_ENTIRE_FILE(DEBUGWriteEntireFile);
-
-#define DEBUG_FREE_FILE_MEMORY(name) void name(ThreadContext *context,void *memory)
-typedef DEBUG_FREE_FILE_MEMORY(debug_free_file_memory);
-DEBUG_FREE_FILE_MEMORY(DEBUGFreeFileMemory);
 
 inline int32_t safeTruncateUint64(uint64_t value) {
     ASSERT(value<= 0xFFFFFFFF);
@@ -150,10 +126,30 @@ struct World {
     TileMap *tileMap;
 };
 
+struct LoadedBitmap {
+    uint32_t width;
+    uint32_t height;
+    uint32_t *pixels;
+};
+
+struct HeroBitmaps {
+    float alignX;
+    float alignY;
+
+    LoadedBitmap head;
+    LoadedBitmap torso;
+    LoadedBitmap cape;
+};
+
+
 struct GameState {
     MemoryArena worldArena;
     World *world;
     TileMapPosition playerP;
+    TileMapPosition cameraP;
+    uint32_t heroFacingDirection = 0;
+    LoadedBitmap backDrop;
+    HeroBitmaps heroBitmaps[4];
 };
 
 #define pushStruct(arena, type) (type *)pushSize_(arena,sizeof(type))

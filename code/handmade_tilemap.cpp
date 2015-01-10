@@ -53,25 +53,6 @@ inline TileChunk* getTileChunk(TileMap *tileMap,
     return result ;
 }
 
-inline void recanonicalizeCoord(TileMap *tileMap,
-        uint32_t *tile,
-        float *tileRel)
-{
-    int32_t offset = roundFloatToInt(*tileRel / tileMap->tileSizeInMeters); 
-    *tile += offset;
-    *tileRel -= offset*tileMap->tileSizeInMeters;
-    ASSERT(*tileRel >= -0.5f * tileMap->tileSizeInMeters);
-    ASSERT(*tileRel <= 0.5 * tileMap->tileSizeInMeters);
-}
-
-inline TileMapPosition recanonicalizePosition(TileMap *tileMap, TileMapPosition pos) 
-{
-    TileMapPosition result = pos;
-    recanonicalizeCoord(tileMap, &result.absTileX, &result.tileRelX);
-    recanonicalizeCoord(tileMap, &result.absTileY, &result.tileRelY);
-
-    return result;
-}
 inline TileChunkPosition getChunkPositionFor(
         TileMap *tileMap,
         uint32_t absTileX,
@@ -86,7 +67,6 @@ inline TileChunkPosition getChunkPositionFor(
     result.relTileY = absTileY & tileMap->chunkMask;
     return result;
 }
-
 static uint32_t getTileValue(TileMap *tileMap, 
         uint32_t absTileX,
         uint32_t absTileY,
@@ -106,17 +86,23 @@ static uint32_t getTileValue(TileMap *tileMap,
             chunkPos.relTileY);
 }
 
+static uint32_t getTileValue(TileMap *tileMap,  TileMapPosition pos) 
+{
+  uint32_t tileChunkValue = getTileValue(tileMap, 
+          pos.absTileX,
+          pos.absTileY,
+          pos.absTileZ);
+    return tileChunkValue;
+}
+
 static bool32 isTileMapPointEmpty(TileMap *tileMap, 
         TileMapPosition pos)
 {
-    uint32_t tileChunkValue = getTileValue(tileMap, 
-            pos.absTileX, 
-            pos.absTileY, 
-            pos.absTileZ);
+    uint32_t tileChunkValue = getTileValue(tileMap, pos); 
+
     return (tileChunkValue == 1 || 
             tileChunkValue == 3 ||
             tileChunkValue == 4); 
-
 }
 
 inline void setTileValueUnchecked(TileMap *tileMap,
@@ -183,3 +169,53 @@ static void setTileValue(MemoryArena *arena,
             tileValue);
 }
 
+inline void recanonicalizeCoord(TileMap *tileMap,
+        uint32_t *tile,
+        float *tileRel)
+{
+    int32_t offset = roundFloatToInt(*tileRel / tileMap->tileSizeInMeters); 
+    *tile += offset;
+    *tileRel -= offset*tileMap->tileSizeInMeters;
+    ASSERT(*tileRel >= -0.5f * tileMap->tileSizeInMeters);
+    ASSERT(*tileRel <= 0.5 * tileMap->tileSizeInMeters);
+}
+
+
+inline TileMapPosition recanonicalizePosition(TileMap *tileMap, TileMapPosition pos) 
+{
+    TileMapPosition result = pos;
+    recanonicalizeCoord(tileMap, &result.absTileX, &result.offsetX);
+    recanonicalizeCoord(tileMap, &result.absTileY, &result.offsetY);
+
+    return result;
+}
+static void iniatilizeArena(MemoryArena *arena, 
+        size_t size,
+        uint8_t *base) 
+{
+    arena->size = size;
+    arena->base = base;
+    arena->used = 0;
+}
+
+inline bool32 areOnSameTile(TileMapPosition *a, TileMapPosition *b) 
+{
+    bool32 result = (a->absTileX == b->absTileX &&
+            a->absTileY == b->absTileY &&
+            a->absTileZ == b->absTileZ);
+    return result;
+}
+
+inline TileMapDifference subtract(TileMap *tileMap, TileMapPosition *a, TileMapPosition *b) 
+{
+    TileMapDifference result;
+
+    float dTileX = (float)a->absTileX - (float)b->absTileX;
+    float dTileY = (float)a->absTileY - (float)b->absTileY;
+    float dTileZ = (float)a->absTileZ - (float)b->absTileZ;
+
+    result.dX = tileMap->tileSizeInMeters * dTileX + (a->offsetX - b->offsetY); 
+    result.dY = tileMap->tileSizeInMeters * dTileY + (a->offsetY - b->offsetY); 
+    result.dZ =  tileMap->tileSizeInMeters * dTileZ ;
+    return result;
+}

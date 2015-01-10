@@ -3,9 +3,9 @@ struct TileMapPosition{
     //Cordinates relative to the tileMap position in the world 
     uint32_t absTileX;
     uint32_t absTileY;
-    //coordinates relative to the tile
-    float tileRelX;
-    float tileRelY;
+    //Coordinates relative to the center of the tile
+    float offsetX;
+    float offsetY;
 };
 
 struct TileMap {

@@ -17,9 +17,9 @@ struct TileMapPosition {
     uint32_t absTileX;
     uint32_t absTileY;
     uint32_t absTileZ;
-    //coordinates relative to the tile
-    float tileRelX;
-    float tileRelY;
+    //Coordinates relative to the center of the tile
+    float offsetX;
+    float offsetY;
 };
 
 struct TileMap {
@@ -36,4 +36,10 @@ struct TileMap {
 
     TileChunk *tileChunks;
 };
+struct TileMapDifference {
+    float dX;
+    float dY;
+    float dZ;
+};
+
 #endif

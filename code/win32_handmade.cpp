@@ -149,41 +149,51 @@ static void Win32ResizeDIBSection(
 }
 
 static void Win32displayBufferInWindow(
-        win32offscreenBuffer *buffer, HDC deviceContext, int width, int height)
+        win32offscreenBuffer *buffer, 
+        HDC deviceContext, 
+        int windowWidth, 
+        int windowHeight)
 {
 
+    if ((windowWidth>= buffer->width*2) &&  (windowHeight>= buffer->height*2)) {
+        StretchDIBits(
+                deviceContext,
+                0,0,buffer->width*2,buffer->height*2,
+                0,0,buffer->width,buffer->height,
+                buffer->bitmapMemory,
+                &buffer->info,
+                DIB_RGB_COLORS,
+                SRCCOPY);
+    }
     //TODO Aspect ratio correction pending.
     int offsetX = 10;
     int offsetY = 10;
 
     PatBlt(deviceContext, 0,0, 
-            width, 
+            windowWidth, 
             offsetY,
             BLACKNESS);
 
     PatBlt(deviceContext, 0,offsetY + buffer->height, 
-            width, 
-            height,
+            windowWidth, 
+            windowHeight,
             BLACKNESS);
 
     PatBlt(deviceContext, 0,0,
             offsetX, 
-            height,
+            windowHeight,
             BLACKNESS);
+
     PatBlt(deviceContext, 
             offsetX + buffer->width,
             0,
-            width, 
-            height, 
+            windowWidth, 
+            windowHeight, 
             BLACKNESS);
     //StretchDIBits stretches our backbuffer up/down to the actual window's 
     //dimensions                                                     n
     StretchDIBits(
             deviceContext,
-            /*
-               top,left,width,height,
-               top,left,width,height,
-               */
             offsetX,offsetY,buffer->width,buffer->height,
             0,0,buffer->width,buffer->height,
             buffer->bitmapMemory,
@@ -265,29 +275,29 @@ inline FILETIME win32_getFileDate(char *fileName) {
     return lastWriteTime;
 }
 
-win32_GameCode win32LoadGameCode(char * sourceDllName,char *tempDllName)
+win32_GameCode win32LoadGameCode(char * sourceDllName,char *tempDllName,char *lockFileName)
 {
     win32_GameCode result = {};
 
-    win32_getFileDate(sourceDllName);
+    if (!GetFileAttributesEx(lockFileName,GetFileExInfoStandard,0)){ 
+        result.lastWriteTime = win32_getFileDate(sourceDllName);
+		 
+        CopyFile(sourceDllName,tempDllName,FALSE);
 
+        result.gameCodeDLL = LoadLibraryA(tempDllName);
 
-    CopyFile(sourceDllName,tempDllName,FALSE);
+        if (result.gameCodeDLL){
+            result.updateAndRender= (game_update_and_render*)
+                GetProcAddress(result.gameCodeDLL,"gameUpdateAndRender");
+            result.getSoundSamples= (game_get_sound_samples*)
+                GetProcAddress(result.gameCodeDLL,"gameGetSoundSamples");
+            result.isValid = (result.updateAndRender && result.getSoundSamples);
+        }
 
-    result.gameCodeDLL = LoadLibraryA(tempDllName);
-
-
-    if (result.gameCodeDLL){
-        result.updateAndRender= (game_update_and_render*)
-            GetProcAddress(result.gameCodeDLL,"gameUpdateAndRender");
-        result.getSoundSamples= (game_get_sound_samples*)
-            GetProcAddress(result.gameCodeDLL,"gameGetSoundSamples");
-        result.isValid = (result.updateAndRender && result.getSoundSamples);
-    }
-
-    if (!result.isValid) {
-        result.updateAndRender = 0;
-        result.getSoundSamples=  0;
+        if (!result.isValid) {
+            result.updateAndRender = 0;
+            result.getSoundSamples=  0;
+        }
     }
     return result;
 }
@@ -315,6 +325,34 @@ static void win32ProcessKeyboardMessage(
 //SOUND
 
 static LPDIRECTSOUNDBUFFER g_secondaryBuffer;
+static bool32 g_DEBUGShowCursor;
+static WINDOWPLACEMENT g_windowPlacement= { sizeof(g_windowPlacement) };
+
+void toggleFullScreen(HWND hwnd)
+{
+  DWORD style = GetWindowLong(hwnd, GWL_STYLE);
+  if (style & WS_OVERLAPPEDWINDOW) {
+    MONITORINFO mInfo = { sizeof(mInfo) };
+    if (GetWindowPlacement(hwnd, &g_windowPlacement) &&
+        GetMonitorInfo(MonitorFromWindow(hwnd,
+                       MONITOR_DEFAULTTOPRIMARY), &mInfo)) {
+      SetWindowLong(hwnd, GWL_STYLE,
+                    style & ~WS_OVERLAPPEDWINDOW);
+      SetWindowPos(hwnd, HWND_TOP,
+                   mInfo.rcMonitor.left, mInfo.rcMonitor.top,
+                   mInfo.rcMonitor.right - mInfo.rcMonitor.left,
+                   mInfo.rcMonitor.bottom - mInfo.rcMonitor.top,
+                   SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+    }
+  } else {
+    SetWindowLong(hwnd, GWL_STYLE,
+                  style |  WS_OVERLAPPEDWINDOW);
+    SetWindowPlacement(hwnd, &g_windowPlacement);
+    SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+                 SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+  }
+}
 
 //Pointer to function
 #define DIRECTSOUND_CREATE(name) \
@@ -666,10 +704,10 @@ static void win32ProcessPendingMessages(
             case WM_QUIT:
                 g_running = false;
                 break;
+            case  WM_KEYUP:
             case  WM_SYSKEYDOWN:
             case  WM_SYSKEYUP:
             case  WM_KEYDOWN:
-            case  WM_KEYUP:
                 {
                     uint32_t vKcode = (uint32_t)message.wParam;
 
@@ -677,6 +715,8 @@ static void win32ProcessPendingMessages(
                     bool32 isDown  = ((message.lParam & (1 << 31))==0);
 
                     if (wasDown != isDown) {
+                        bool32 isAltDown = 
+                            (message.lParam & (1 << 29));
                         switch (vKcode) {
                             case 'W':
                                 win32ProcessKeyboardMessage(&keyboardController
@@ -752,11 +792,14 @@ static void win32ProcessPendingMessages(
                                 break;
 #endif
                             case VK_F4:
-                                bool32 isAltDown = 
-                                    (message.lParam & (1 << 29));
                                 if (isAltDown){
                                     g_running=false;
                                     OutputDebugStringA("Pressed ALT+F4\n");
+                                }
+                                break;
+                            case VK_RETURN:
+                                if (isAltDown && isDown){
+                                    toggleFullScreen(message.hwnd);
                                 }
                                 break;
                         }
@@ -798,6 +841,14 @@ static LRESULT CALLBACK MainWindowCallback(
                 g_running = false;
                 OutputDebugStringA("WM_DESTROY\n");
             }break;
+        case WM_SETCURSOR:
+            if (g_DEBUGShowCursor) {
+                result = DefWindowProc(hwnd,uMsg,wParam,lParam); 
+            } else {
+                SetCursor (0);
+            }
+    //WindowClass.hCursor = LoadCursor(0,IDC_CROSS);
+            break;
         case WM_CLOSE:
             {
                 //TODO Handle with a message to he user ?
@@ -967,22 +1018,32 @@ int CALLBACK WinMain(
             sizeof(tempDllFullPath),
             tempDllFullPath);
 
+    char lockFullPath[WIN32_STATE_FILE_NAME_COUNT];
+    win32_buildPathFileName(&state, 
+            "lock.tmp", 
+            sizeof(lockFullPath),
+            lockFullPath);
+
 
 
     win32LoadInput();
     win32_GameCode gameCode = 
-        win32LoadGameCode(sourceDllFullPath,tempDllFullPath); 
+        win32LoadGameCode(sourceDllFullPath,tempDllFullPath,lockFullPath); 
 
     WNDCLASS WindowClass =  {}; 
 
-    const int WINDOW_WIDTH = 1270 ;
-    const int WINDOW_HEIGHT = 800;
-    Win32ResizeDIBSection(&g_frameBuffer,WINDOW_WIDTH,WINDOW_HEIGHT);
+    const int BUFFER_WIDTH = 960;
+    const int BUFFER_HEIGHT= 540;
+    Win32ResizeDIBSection(&g_frameBuffer,BUFFER_WIDTH,BUFFER_HEIGHT);
 
 
     WindowClass.style =  CS_HREDRAW | CS_VREDRAW;// | CS_OWNDC;
     WindowClass.lpfnWndProc = MainWindowCallback;
     WindowClass.hInstance = hInstance;
+    WindowClass.hCursor = LoadCursor(0,IDC_CROSS);
+#ifdef DEBUG_MODE
+    g_DEBUGShowCursor = true;
+#endif
     //WindowClass.hIcon;
     WindowClass.lpszClassName = "HandmadeHeroWindowClass";
 
@@ -995,6 +1056,8 @@ int CALLBACK WinMain(
         (timeBeginPeriod(desiredSchedulerMS) == TIMERR_NOERROR);
 
 
+    const int WINDOW_WIDTH = 1500;
+    const int WINDOW_HEIGHT = 700;
 
     if (RegisterClass(&WindowClass))    {
 
@@ -1018,6 +1081,7 @@ int CALLBACK WinMain(
 
             HDC refreshDC = GetDC(hwnd); 
             int monitorRefreshHz = GetDeviceCaps(refreshDC,VREFRESH);
+            ReleaseDC(hwnd, refreshDC);
             monitorRefreshHz = (monitorRefreshHz > 1) ? 
                 monitorRefreshHz : 60;
             float gameUpdateHz = (float)monitorRefreshHz / 2.0f;
@@ -1172,10 +1236,11 @@ int CALLBACK WinMain(
                     {
                         win32UnloadGameCode(&gameCode);
                         gameCode = win32LoadGameCode(sourceDllFullPath,
-                                tempDllFullPath); 
+                                tempDllFullPath,
+                                lockFullPath); 
                     }
-
-
+ 
+ 
                     GameControllerInput *newKeyboardController = 
                         getController(newInput,0);
                     GameControllerInput *oldKeyboardController = 
@@ -1455,6 +1520,7 @@ int CALLBACK WinMain(
                             SoundBuffer soundBuffer = {};
                             soundBuffer.samplesPerSecond = 
                                 soundOutput.samplesPerSecond; 
+
                             soundBuffer.sampleCount = 
                                 bytesToWrite / soundOutput.bytesPerSample; 
                             soundBuffer.samples = samples;  
@@ -1549,7 +1615,7 @@ int CALLBACK WinMain(
 #endif
 
 
-#if 0
+#if 1
                         uint64_t endCycleCount = __rdtsc();
                         uint64_t cyclesElapsed = endCycleCount - 
                             lastCycleCount;
@@ -1564,7 +1630,7 @@ int CALLBACK WinMain(
                             (buffer,
                              "ms/loop %0.2f FPS %0.2f MegaCycles %0.2f\n",
                              msPerFrame,FPS,MCPF);
-                        //OutputDebugStringA(buffer);
+                        OutputDebugStringA(buffer);
 
 #endif
                     }
