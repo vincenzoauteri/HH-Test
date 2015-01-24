@@ -1,5 +1,6 @@
 #ifndef HANDMADE_TILEMAP
 #define HANDMADE_TILEMAP
+#include "handmade_math.h"
 struct TileChunk {
     uint32_t  *tiles;
 };
@@ -18,8 +19,7 @@ struct TileMapPosition {
     uint32_t absTileY;
     uint32_t absTileZ;
     //Coordinates relative to the center of the tile
-    float offsetX;
-    float offsetY;
+    V2 offset_;
 };
 
 struct TileMap {
@@ -37,8 +37,7 @@ struct TileMap {
     TileChunk *tileChunks;
 };
 struct TileMapDifference {
-    float dX;
-    float dY;
+    V2 dXY;
     float dZ;
 };
 

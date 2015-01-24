@@ -4,9 +4,9 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.8	//
-ARRAY_COUNT	.\handmade.h	9;"	d
-ASSERT	.\handmade.h	17;"	d
-ASSERT	.\handmade.h	20;"	d
+ARRAY_COUNT	.\handmade.h	10;"	d
+ASSERT	.\handmade.h	18;"	d
+ASSERT	.\handmade.h	21;"	d
 BLUE_COLOR	.\handmade.cpp	13;"	d	file:
 BitScanResult	.\handmade_intrinsics.h	/^struct BitScanResult {$/;"	s
 BitmapHeader	.\handmade.cpp	/^struct BitmapHeader {$/;"	s	file:
@@ -16,7 +16,7 @@ COMPILER_LLVM	.\handmade_platform.h	22;"	d
 COMPILER_MSVC	.\handmade_platform.h	18;"	d
 COMPILER_MSVC	.\handmade_platform.h	19;"	d
 COMPILER_MSVC	.\handmade_platform.h	9;"	d
-CommonCompilerFlags	.\build.bat	/^set CommonCompilerFlags=-MTd -nologo -Gm -Zi -GR- -EHa- -Od -Oi -WX -W4 -wd4100 -wd4505 -wd4189 -wd4201 -DDEBUG_MODE=1 -DHANDMADE_WIN32=1 -FC $/;"	v
+CommonCompilerFlags	.\build.bat	/^set CommonCompilerFlags=-MTd -nologo -fp:fast -Gm- -GR- -EHa- -Od -Oi -WX -W4 -wd4201 -wd4100 -wd4189 -wd4505 -DDEBUG_MODE=1 -DHANDMADE_WIN32=1 -FC -Z7$/;"	v
 CommonLinkerFlags	.\build.bat	/^set CommonLinkerFlags=-incremental:no -opt:ref user32.lib gdi32.lib winmm.lib$/;"	v
 DEBUGFreeFileMemory	.\handmade.h	/^    debug_free_file_memory *DEBUGFreeFileMemory;$/;"	m	struct:GameMemory
 DEBUGFreeFileMemory	.\handmade_platform.h	/^DEBUG_FREE_FILE_MEMORY(DEBUGFreeFileMemory);$/;"	v
@@ -31,31 +31,33 @@ DEBUG_READ_ENTIRE_FILE	.\win32_handmade.cpp	/^DEBUG_READ_ENTIRE_FILE(DEBUGReadEn
 DEBUG_WRITE_ENTIRE_FILE	.\handmade_platform.h	44;"	d
 DEBUG_WRITE_ENTIRE_FILE	.\win32_handmade.cpp	/^DEBUG_WRITE_ENTIRE_FILE(DEBUGWriteEntireFile)$/;"	f
 DEBUGloadBMP	.\handmade.cpp	/^static LoadedBitmap DEBUGloadBMP(ThreadContext *thread, $/;"	f	file:
-DIRECTSOUND_CREATE	.\win32_handmade.cpp	320;"	d	file:
+DIRECTSOUND_CREATE	.\win32_handmade.cpp	358;"	d	file:
+Entity	.\handmade.h	/^struct Entity{$/;"	s
 FrameBuffer	.\handmade.h	/^struct FrameBuffer {$/;"	s
-GAME_GET_SOUND_SAMPLES	.\handmade.cpp	/^extern "C" GAME_GET_SOUND_SAMPLES(gameGetSoundSamples)$/;"	f
-GAME_GET_SOUND_SAMPLES	.\handmade.h	115;"	d
+GAME_GET_SOUND_SAMPLES	.\handmade.h	116;"	d
 GAME_UPDATE_AND_RENDER	.\handmade.cpp	/^extern "C" GAME_UPDATE_AND_RENDER(gameUpdateAndRender) $/;"	f
-GAME_UPDATE_AND_RENDER	.\handmade.h	110;"	d
-GIGABYTES	.\handmade.h	12;"	d
+GAME_UPDATE_AND_RENDER	.\handmade.h	111;"	d
+GIGABYTES	.\handmade.h	13;"	d
 GREEN_COLOR	.\handmade.cpp	11;"	d	file:
 GameButtonState	.\handmade.h	/^struct GameButtonState {$/;"	s
 GameControllerInput	.\handmade.h	/^struct GameControllerInput{$/;"	s
 GameInput	.\handmade.h	/^struct GameInput {$/;"	s
 GameMemory	.\handmade.h	/^struct GameMemory{$/;"	s
 GameState	.\handmade.h	/^struct GameState {$/;"	s
-HANDMADE_H	.\handmade.h	165;"	d
+HANDMADE_H	.\handmade.h	176;"	d
+HANDMADE_MATH	.\handmade_math.h	2;"	d
 HANDMADE_PLATFORM	.\handmade_platform.h	53;"	d
 HANDMADE_TILEMAP	.\handmade_tilemap.h	2;"	d
 HeroBitmaps	.\handmade.h	/^struct HeroBitmaps {$/;"	s
-KILOBYTES	.\handmade.h	14;"	d
+KILOBYTES	.\handmade.h	15;"	d
 LoadedBitmap	.\handmade.h	/^struct LoadedBitmap {$/;"	s
-MEGABYTES	.\handmade.h	13;"	d
+MEGABYTES	.\handmade.h	14;"	d
 MainWindowCallback	.\win32_handmade.cpp	/^static LRESULT CALLBACK MainWindowCallback($/;"	f	file:
 MemoryArena	.\handmade.h	/^struct MemoryArena {$/;"	s
 RED_COLOR	.\handmade.cpp	12;"	d	file:
+RenderSoundSamples	.\handmade.cpp	/^void RenderSoundSamples(FrameBuffer  *frameBuffer, SoundBuffer *soundBuffer){$/;"	f
 SoundBuffer	.\handmade.h	/^struct SoundBuffer{$/;"	s
-TERABYTES	.\handmade.h	11;"	d
+TERABYTES	.\handmade.h	12;"	d
 ThreadContext	.\handmade_platform.h	/^struct ThreadContext{ $/;"	s
 TileChunk	.\handmade_tile.h	/^struct TileChunk {$/;"	s
 TileChunk	.\handmade_tilemap.h	/^struct TileChunk {$/;"	s
@@ -63,20 +65,22 @@ TileChunkPosition	.\handmade_tile.h	/^struct TileChunkPosition {$/;"	s
 TileChunkPosition	.\handmade_tilemap.h	/^struct TileChunkPosition {$/;"	s
 TileMap	.\handmade_tile.h	/^struct TileMap {$/;"	s
 TileMap	.\handmade_tilemap.h	/^struct TileMap {$/;"	s
+TileMapDifference	.\handmade_tilemap.h	/^struct TileMapDifference {$/;"	s
 TileMapPosition	.\handmade_tile.h	/^struct TileMapPosition{$/;"	s
 TileMapPosition	.\handmade_tilemap.h	/^struct TileMapPosition {$/;"	s
+V2	.\handmade_math.h	/^struct V2 {$/;"	s
 W32HANDMADE_H	.\win32_handmade.h	2;"	d
 WIN32_STATE_FILE_NAME_COUNT	.\win32_handmade.h	34;"	d
 Win32ResizeDIBSection	.\win32_handmade.cpp	/^static void Win32ResizeDIBSection($/;"	f	file:
 Win32displayBufferInWindow	.\win32_handmade.cpp	/^static void Win32displayBufferInWindow($/;"	f	file:
 WinMain	.\win32_handmade.cpp	/^int CALLBACK WinMain($/;"	f
 World	.\handmade.h	/^struct World {$/;"	s
-XInputGetState	.\win32_handmade.cpp	207;"	d	file:
-XInputSetState	.\win32_handmade.cpp	220;"	d	file:
+XInputGetState	.\win32_handmade.cpp	217;"	d	file:
+XInputSetState	.\win32_handmade.cpp	230;"	d	file:
 X_INPUT_GET_STATE	.\win32_handmade.cpp	/^X_INPUT_GET_STATE(xInputGetStateStub)$/;"	f
-X_INPUT_GET_STATE	.\win32_handmade.cpp	197;"	d	file:
+X_INPUT_GET_STATE	.\win32_handmade.cpp	207;"	d	file:
 X_INPUT_SET_STATE	.\win32_handmade.cpp	/^X_INPUT_SET_STATE(xInputSetStateStub)$/;"	f
-X_INPUT_SET_STATE	.\win32_handmade.cpp	210;"	d	file:
+X_INPUT_SET_STATE	.\win32_handmade.cpp	220;"	d	file:
 absTileX	.\handmade_tile.h	/^    uint32_t absTileX;$/;"	m	struct:TileMapPosition
 absTileX	.\handmade_tilemap.h	/^    uint32_t absTileX;$/;"	m	struct:TileMapPosition
 absTileY	.\handmade_tile.h	/^    uint32_t absTileY;$/;"	m	struct:TileMapPosition
@@ -86,8 +90,8 @@ actionDown	.\handmade.h	/^            GameButtonState actionDown;$/;"	m	struct:G
 actionLeft	.\handmade.h	/^            GameButtonState actionLeft;$/;"	m	struct:GameControllerInput::__anon1::__anon2
 actionRight	.\handmade.h	/^            GameButtonState actionRight;$/;"	m	struct:GameControllerInput::__anon1::__anon2
 actionUp	.\handmade.h	/^            GameButtonState actionUp;$/;"	m	struct:GameControllerInput::__anon1::__anon2
-alignX	.\handmade.h	/^    int32_t alignX;$/;"	m	struct:HeroBitmaps
-alignY	.\handmade.h	/^    int32_t alignY;$/;"	m	struct:HeroBitmaps
+alignX	.\handmade.h	/^    float alignX;$/;"	m	struct:HeroBitmaps
+alignY	.\handmade.h	/^    float alignY;$/;"	m	struct:HeroBitmaps
 arctan	.\handmade_intrinsics.h	/^inline float arctan(float angle) {$/;"	f
 areOnSameTile	.\handmade_tilemap.cpp	/^inline bool32 areOnSameTile(TileMapPosition *a, TileMapPosition *b) $/;"	f
 backDrop	.\handmade.h	/^    LoadedBitmap backDrop;$/;"	m	struct:GameState
@@ -103,8 +107,11 @@ buttons	.\handmade.h	/^        GameButtonState buttons[10];$/;"	m	union:GameCont
 bytesPerPixel	.\handmade.h	/^    int bytesPerPixel; $/;"	m	struct:FrameBuffer
 bytesPerPixel	.\win32_handmade.h	/^    int bytesPerPixel ;  $/;"	m	struct:win32offscreenBuffer
 bytesPerSample	.\win32_handmade.h	/^    int bytesPerSample ;$/;"	m	struct:win32_soundOutput
+cameraFollowingEntityIndex	.\handmade.h	/^    uint32_t cameraFollowingEntityIndex;$/;"	m	struct:GameState
+cameraP	.\handmade.h	/^    TileMapPosition cameraP;$/;"	m	struct:GameState
 cape	.\handmade.h	/^    LoadedBitmap cape;$/;"	m	struct:HeroBitmaps
 catStrings	.\win32_handmade.cpp	/^void catStrings( size_t countA, char *sourceA, $/;"	f
+centeredTilePoint	.\handmade_tilemap.cpp	/^inline TileMapPosition centeredTilePoint($/;"	f
 chunkDim	.\handmade_tile.h	/^    uint32_t chunkDim;$/;"	m	struct:TileMap
 chunkDim	.\handmade_tilemap.h	/^    uint32_t chunkDim;$/;"	m	struct:TileMap
 chunkMask	.\handmade_tile.h	/^    uint8_t chunkMask;$/;"	m	struct:TileMap
@@ -117,6 +124,9 @@ compression	.\handmade.cpp	/^    uint32_t compression;$/;"	m	struct:BitmapHeader
 contentSize	.\handmade_platform.h	/^    uint32_t contentSize;$/;"	m	struct:debugReadFileResult
 controllers	.\handmade.h	/^    GameControllerInput controllers[5];$/;"	m	struct:GameInput
 cosine	.\handmade_intrinsics.h	/^inline float cosine(float angle) {$/;"	f
+dP	.\handmade.h	/^    V2 dP;$/;"	m	struct:Entity
+dXY	.\handmade_tilemap.h	/^    V2 dXY;$/;"	m	struct:TileMapDifference
+dZ	.\handmade_tilemap.h	/^    float dZ;$/;"	m	struct:TileMapDifference
 debugReadFileResult	.\handmade_platform.h	/^struct debugReadFileResult {$/;"	s
 debug_free_file_memory	.\handmade_platform.h	/^typedef DEBUG_FREE_FILE_MEMORY(debug_free_file_memory);$/;"	t
 debug_read_entire_file	.\handmade_platform.h	/^typedef DEBUG_READ_ENTIRE_FILE(debug_read_entire_file);$/;"	t
@@ -125,7 +135,10 @@ directsound_create	.\win32_handmade.cpp	/^typedef DIRECTSOUND_CREATE(directsound
 drawBitmap	.\handmade.cpp	/^static void drawBitmap(FrameBuffer *buffer, $/;"	f	file:
 drawRect	.\handmade.cpp	/^static void drawRect(FrameBuffer *buffer, $/;"	f	file:
 dtForFrame	.\handmade.h	/^    float dtForFrame;$/;"	m	struct:GameInput
+e	.\handmade_math.h	/^        float e[2];$/;"	m	union:V2::__anon3
 endedDown	.\handmade.h	/^    bool32 endedDown;$/;"	m	struct:GameButtonState
+entities	.\handmade.h	/^    entity entities[256];$/;"	m	struct:GameState
+exists	.\handmade.h	/^    bool32 exists;$/;"	m	struct:Entity
 expectedFrameBoundary	.\win32_handmade.h	/^    DWORD expectedFrameBoundary;$/;"	m	struct:win32DebugTimeMarker
 fileContent	.\handmade_platform.h	/^    void *fileContent;$/;"	m	struct:debugReadFileResult
 fileHandle	.\win32_handmade.h	/^    HANDLE fileHandle;$/;"	m	struct:win32_ReplayBuffer
@@ -139,19 +152,24 @@ findLeastSignificantBit	.\handmade_intrinsics.h	/^static BitScanResult findLeast
 flipPlayCursor	.\win32_handmade.h	/^    DWORD flipPlayCursor;$/;"	m	struct:win32DebugTimeMarker
 flipWriteCursor	.\win32_handmade.h	/^    DWORD flipWriteCursor;$/;"	m	struct:win32DebugTimeMarker
 floorFloatToInt	.\handmade_intrinsics.h	/^inline int32_t floorFloatToInt(float floatNumber) $/;"	f
+foo	.\handmade.cpp	/^void foo(void)$/;"	f	file:
 found	.\handmade_intrinsics.h	/^    bool32 found;$/;"	m	struct:BitScanResult
+g_DEBUGShowCursor	.\win32_handmade.cpp	/^static bool32 g_DEBUGShowCursor;$/;"	v	file:
 g_frameBuffer	.\win32_handmade.cpp	/^static win32offscreenBuffer g_frameBuffer;$/;"	v	file:
 g_pause	.\win32_handmade.cpp	/^static bool g_pause;$/;"	v	file:
 g_perfCountFrequency	.\win32_handmade.cpp	/^static int64_t g_perfCountFrequency;$/;"	v	file:
 g_running	.\win32_handmade.cpp	/^static bool g_running;$/;"	v	file:
 g_secondaryBuffer	.\win32_handmade.cpp	/^static LPDIRECTSOUNDBUFFER g_secondaryBuffer;$/;"	v	file:
+g_windowPlacement	.\win32_handmade.cpp	/^static WINDOWPLACEMENT g_windowPlacement= { sizeof(g_windowPlacement) };$/;"	v	file:
 gameCodeDLL	.\win32_handmade.cpp	/^    HMODULE gameCodeDLL;$/;"	m	struct:win32_GameCode	file:
 gameMemoryBlock	.\win32_handmade.h	/^    void *gameMemoryBlock; $/;"	m	struct:win32_State
 gameOutputSound	.\handmade.cpp	/^void gameOutputSound(SoundBuffer *soundBuffer)$/;"	f
+gameOutputSound	.\handmade.cpp	/^void gameOutputSound(SoundBuffer *soundBuffer,float tSine, int toneHz)$/;"	f
 game_get_sound_samples	.\handmade.h	/^typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);$/;"	t
 game_update_and_render	.\handmade.h	/^typedef GAME_UPDATE_AND_RENDER(game_update_and_render);$/;"	t
 getChunkPositionFor	.\handmade_tilemap.cpp	/^inline TileChunkPosition getChunkPositionFor($/;"	f
 getController	.\handmade.h	/^inline GameControllerInput *getController(GameInput *input, int controllerIndex){$/;"	f
+getEntity	.\handmade.cpp	/^inline Entity * getEntity(GameState gameState, uint32_t index){$/;"	f
 getSoundSamples	.\win32_handmade.cpp	/^    game_get_sound_samples *getSoundSamples;$/;"	m	struct:win32_GameCode	file:
 getTileChunk	.\handmade_tilemap.cpp	/^inline TileChunk* getTileChunk(TileMap *tileMap,$/;"	f
 getTileValue	.\handmade_tilemap.cpp	/^static uint32_t getTileValue(TileMap *tileMap,  TileMapPosition pos) $/;"	f	file:
@@ -173,6 +191,8 @@ horzResolution	.\handmade.cpp	/^    uint32_t horzResolution;$/;"	m	struct:Bitmap
 index	.\handmade_intrinsics.h	/^    uint32_t index ;$/;"	m	struct:BitScanResult
 info	.\win32_handmade.h	/^    BITMAPINFO info;$/;"	m	struct:win32offscreenBuffer
 iniatilizeArena	.\handmade_tilemap.cpp	/^static void iniatilizeArena(MemoryArena *arena, $/;"	f	file:
+initPlayer	.\handmade.cpp	/^static void initPlayer(Entity *entity) {$/;"	f	file:
+inner	.\handmade_math.h	/^inline float inner(V2 v1, V2 v2) $/;"	f
 inputPlayingIndex	.\win32_handmade.h	/^    int inputPlayingIndex;$/;"	m	struct:win32_State
 inputRecordingIndex	.\win32_handmade.h	/^    int inputRecordingIndex;$/;"	m	struct:win32_State
 internal	.\win32_handmade.cpp	5;"	d	file:
@@ -180,10 +200,12 @@ isAnalog	.\handmade.h	/^    bool32 isAnalog;$/;"	m	struct:GameControllerInput
 isConnected	.\handmade.h	/^    bool32 isConnected;$/;"	m	struct:GameControllerInput
 isInitialized	.\handmade.h	/^    bool32 isInitialized;$/;"	m	struct:GameMemory
 isTileMapPointEmpty	.\handmade_tilemap.cpp	/^static bool32 isTileMapPointEmpty(TileMap *tileMap, $/;"	f	file:
+isTileValueEmpty	.\handmade_tilemap.cpp	/^static bool32 isTileValueEmpty(uint32_t tileValue)  $/;"	f	file:
 isValid	.\win32_handmade.cpp	/^    bool32 isValid;$/;"	m	struct:win32_GameCode	file:
 lastSlash	.\win32_handmade.h	/^    char *lastSlash ; $/;"	m	struct:win32_State
 lastWriteTime	.\win32_handmade.cpp	/^    FILETIME lastWriteTime;$/;"	m	struct:win32_GameCode	file:
 leftShoulder	.\handmade.h	/^            GameButtonState leftShoulder;$/;"	m	struct:GameControllerInput::__anon1::__anon2
+lengthSq	.\handmade_math.h	/^inline float lengthSq(V2 v) $/;"	f
 local_persist	.\win32_handmade.cpp	7;"	d	file:
 memoryBlock	.\win32_handmade.h	/^    void *memoryBlock;$/;"	m	struct:win32_ReplayBuffer
 memoryMap	.\win32_handmade.h	/^    HANDLE memoryMap;$/;"	m	struct:win32_ReplayBuffer
@@ -196,10 +218,15 @@ moveDown	.\handmade.h	/^            GameButtonState moveDown;$/;"	m	struct:GameC
 moveLeft	.\handmade.h	/^            GameButtonState moveLeft;$/;"	m	struct:GameControllerInput::__anon1::__anon2
 moveRight	.\handmade.h	/^            GameButtonState moveRight;$/;"	m	struct:GameControllerInput::__anon1::__anon2
 moveUp	.\handmade.h	/^            GameButtonState moveUp;$/;"	m	struct:GameControllerInput::__anon1::__anon2
+offset	.\handmade_tilemap.h	/^    V2 offset;$/;"	m	struct:TileMapPosition
 offsetX	.\handmade_tile.h	/^    float offsetX;$/;"	m	struct:TileMapPosition
-offsetX	.\handmade_tilemap.h	/^    float offsetX;$/;"	m	struct:TileMapPosition
 offsetY	.\handmade_tile.h	/^    float offsetY;$/;"	m	struct:TileMapPosition
-offsetY	.\handmade_tilemap.h	/^    float offsetY;$/;"	m	struct:TileMapPosition
+operator *	.\handmade_math.h	/^inline V2 operator*(V2 v, float a) $/;"	f
+operator *=	.\handmade_math.h	/^inline V2& V2::operator*=(float a) $/;"	f	class:V2
+operator +	.\handmade_math.h	/^inline V2 operator+(V2 a, V2 b) $/;"	f
+operator +=	.\handmade_math.h	/^inline V2& V2::operator+=(V2 v) $/;"	f	class:V2
+operator -	.\handmade_math.h	/^inline V2 operator-(V2 a) $/;"	f
+operator -	.\handmade_math.h	/^inline V2 operator-(V2 a, V2 b) $/;"	f
 outputByteCount	.\win32_handmade.h	/^    DWORD outputByteCount;$/;"	m	struct:win32DebugTimeMarker
 outputLocation	.\win32_handmade.h	/^    DWORD outputLocation;$/;"	m	struct:win32DebugTimeMarker
 outputPlayCursor	.\win32_handmade.h	/^    DWORD outputPlayCursor;$/;"	m	struct:win32DebugTimeMarker
@@ -215,10 +242,11 @@ pixels	.\handmade.h	/^    uint32_t *pixels;$/;"	m	struct:LoadedBitmap
 placeHolder	.\handmade_platform.h	/^    int placeHolder;$/;"	m	struct:ThreadContext
 planes	.\handmade.cpp	/^    uint16_t planes;$/;"	m	struct:BitmapHeader	file:
 playbackHandle	.\win32_handmade.h	/^    HANDLE playbackHandle;$/;"	m	struct:win32_State
-playerP	.\handmade.h	/^    TileMapPosition playerP;$/;"	m	struct:GameState
-pushArray	.\handmade.h	155;"	d
+playerIndexForController	.\handmade.h	/^    uint32_t playerIndexForController[ARRAY_COUNT(((GameInput*)0)->controllers)];$/;"	m	struct:GameState
+position	.\handmade.h	/^    TileMapPosition position;$/;"	m	struct:Entity
+pushArray	.\handmade.h	165;"	d
 pushSize_	.\handmade.h	/^void *pushSize_(MemoryArena *arena, size_t size) $/;"	f
-pushStruct	.\handmade.h	154;"	d
+pushStruct	.\handmade.h	164;"	d
 randomNumberTable	.\handmade_random.h	/^uint32_t randomNumberTable [] = $/;"	v
 recanonicalizeCoord	.\handmade_tilemap.cpp	/^inline void recanonicalizeCoord(TileMap *tileMap,$/;"	f
 recanonicalizePosition	.\handmade_tilemap.cpp	/^inline TileMapPosition recanonicalizePosition(TileMap *tileMap, TileMapPosition pos) $/;"	f
@@ -228,6 +256,8 @@ relTileX	.\handmade_tile.h	/^    uint32_t relTileX;$/;"	m	struct:TileChunkPositi
 relTileX	.\handmade_tilemap.h	/^    uint32_t relTileX;$/;"	m	struct:TileChunkPosition
 relTileY	.\handmade_tile.h	/^    uint32_t relTileY;$/;"	m	struct:TileChunkPosition
 relTileY	.\handmade_tilemap.h	/^    uint32_t relTileY;$/;"	m	struct:TileChunkPosition
+renderPlayer	.\handmade.cpp	/^static void renderPlayer(FrameBuffer *buffer, int playerP.tileRelX, int playerP.tileRelY)$/;"	f	file:
+renderWeirdGradient	.\handmade.cpp	/^void renderWeirdGradient(FrameBuffer *buffer,int xOffset,int yOffset)      $/;"	f
 replayBuffers	.\win32_handmade.h	/^    win32_ReplayBuffer replayBuffers[4];$/;"	m	struct:win32_State
 reserved1	.\handmade.cpp	/^    uint16_t reserved1;$/;"	m	struct:BitmapHeader	file:
 reserved2	.\handmade.cpp	/^    uint16_t reserved2;$/;"	m	struct:BitmapHeader	file:
@@ -248,9 +278,11 @@ sine	.\handmade_intrinsics.h	/^inline float sine(float angle) {$/;"	f
 size	.\handmade.cpp	/^    uint32_t size;$/;"	m	struct:BitmapHeader	file:
 size	.\handmade.h	/^    size_t size ;$/;"	m	struct:MemoryArena
 sizeOfBitmap	.\handmade.cpp	/^    uint32_t sizeOfBitmap;$/;"	m	struct:BitmapHeader	file:
+square	.\handmade_math.h	/^inline float square(float a) $/;"	f
 stickAverageX	.\handmade.h	/^    float stickAverageX;$/;"	m	struct:GameControllerInput
 stickAverageY	.\handmade.h	/^    float stickAverageY;$/;"	m	struct:GameControllerInput
 stringLength	.\win32_handmade.cpp	/^static int stringLength(char *string) {$/;"	f	file:
+subtract	.\handmade_tilemap.cpp	/^inline TileMapDifference subtract(TileMap *tileMap, TileMapPosition *a, TileMapPosition *b) $/;"	f
 tSine	.\win32_handmade.h	/^    float tSine;$/;"	m	struct:win32_soundOutput
 tileChunkCountX	.\handmade_tile.h	/^    uint32_t tileChunkCountX;$/;"	m	struct:TileMap
 tileChunkCountX	.\handmade_tilemap.h	/^    uint32_t tileChunkCountX;$/;"	m	struct:TileMap
@@ -272,6 +304,7 @@ tileSizeInMeters	.\handmade_tilemap.h	/^    float tileSizeInMeters;$/;"	m	struct
 tileSizeInPixels	.\handmade_tile.h	/^    int32_t tileSizeInPixels;$/;"	m	struct:TileMap
 tiles	.\handmade_tile.h	/^    uint32_t  *tiles;$/;"	m	struct:TileChunk
 tiles	.\handmade_tilemap.h	/^    uint32_t  *tiles;$/;"	m	struct:TileChunk
+toggleFullScreen	.\win32_handmade.cpp	/^void toggleFullScreen(HWND hwnd)$/;"	f
 torso	.\handmade.h	/^    LoadedBitmap torso;$/;"	m	struct:HeroBitmaps
 totalSize	.\win32_handmade.h	/^    uint64_t totalSize;$/;"	m	struct:win32_State
 transientStorage	.\handmade.h	/^    void *transientStorage;$/;"	m	struct:GameMemory
@@ -279,6 +312,7 @@ transientStorageSize	.\handmade.h	/^    uint64_t transientStorageSize;$/;"	m	str
 truncateFloatToInt	.\handmade_intrinsics.h	/^inline int32_t truncateFloatToInt(float floatNumber) $/;"	f
 updateAndRender	.\win32_handmade.cpp	/^    game_update_and_render *updateAndRender;$/;"	m	struct:win32_GameCode	file:
 used	.\handmade.h	/^    size_t used;$/;"	m	struct:MemoryArena
+v2	.\handmade_math.h	/^inline V2 v2(float a, float b)$/;"	f
 vertResolution	.\handmade.cpp	/^    uint32_t vertResolution;$/;"	m	struct:BitmapHeader	file:
 wavePeriod	.\win32_handmade.h	/^    int wavePeriod ;$/;"	m	struct:win32_soundOutput
 width	.\handmade.cpp	/^    int32_t width;$/;"	m	struct:BitmapHeader	file:
@@ -290,7 +324,7 @@ win32ClearBuffer	.\win32_handmade.cpp	/^static void win32ClearBuffer(win32_sound
 win32DebugTimeMarker	.\win32_handmade.h	/^struct win32DebugTimeMarker {$/;"	s
 win32FillSoundBuffer	.\win32_handmade.cpp	/^static void win32FillSoundBuffer(win32_soundOutput *soundOutput, $/;"	f	file:
 win32InitSound	.\win32_handmade.cpp	/^static void win32InitSound(HWND hwnd, $/;"	f	file:
-win32LoadGameCode	.\win32_handmade.cpp	/^win32_GameCode win32LoadGameCode(char * sourceDllName,char *tempDllName)$/;"	f
+win32LoadGameCode	.\win32_handmade.cpp	/^win32_GameCode win32LoadGameCode(char * sourceDllName,char *tempDllName,char *lockFileName)$/;"	f
 win32LoadInput	.\win32_handmade.cpp	/^static void win32LoadInput(void) $/;"	f	file:
 win32ProcessDigitalButton	.\win32_handmade.cpp	/^static void win32ProcessDigitalButton($/;"	f	file:
 win32ProcessKeyboardMessage	.\win32_handmade.cpp	/^static void win32ProcessKeyboardMessage($/;"	f	file:
@@ -319,5 +353,7 @@ win32offscreenBuffer	.\win32_handmade.h	/^struct win32offscreenBuffer {$/;"	s
 win32windowDimensions	.\win32_handmade.h	/^struct win32windowDimensions{$/;"	s
 world	.\handmade.h	/^    World *world;$/;"	m	struct:GameState
 worldArena	.\handmade.h	/^    MemoryArena worldArena;$/;"	m	struct:GameState
+x	.\handmade_math.h	/^            float x;$/;"	m	struct:V2::__anon3::__anon4
 x_input_get_state	.\win32_handmade.cpp	/^typedef X_INPUT_GET_STATE(x_input_get_state);$/;"	t	file:
 x_input_set_state	.\win32_handmade.cpp	/^typedef X_INPUT_SET_STATE(x_input_set_state);$/;"	t	file:
+y	.\handmade_math.h	/^            float y;$/;"	m	struct:V2::__anon3::__anon4

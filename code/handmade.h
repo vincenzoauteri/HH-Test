@@ -5,8 +5,12 @@
 #include <math.h>
 #include <assert.h>
 #include "handmade_tilemap.h"
+#include "handmade_math.h"
 
 #define ARRAY_COUNT(array) (sizeof(array) / sizeof(array[0]))
+
+#define MIN(a,b) ((a < b) ? (a) : (b))
+#define MAX(a,b) ((a > b) ? (a) : (b))
 
 #define TERABYTES(tb) ((uint64_t)1024*1024*1024*1024*tb)
 #define GIGABYTES(gb) ((uint64_t)1024*1024*1024*gb)
@@ -19,6 +23,7 @@
 #else
 #define ASSERT(expression)  
 #endif
+
 
 
 inline int32_t safeTruncateUint64(uint64_t value) {
@@ -71,6 +76,9 @@ struct GameControllerInput{
 
             GameButtonState leftShoulder;
             GameButtonState rightShoulder;
+
+            GameButtonState start;
+            GameButtonState back;
         };
     };
 };
@@ -141,15 +149,26 @@ struct HeroBitmaps {
     LoadedBitmap cape;
 };
 
+struct Entity{
+    bool32 exists;
+    TileMapPosition position;
+    V2 dP;
+    float width;
+    float height;
+    uint32_t facingDirection;
+};
 
 struct GameState {
     MemoryArena worldArena;
     World *world;
-    TileMapPosition playerP;
+    uint32_t cameraFollowingEntityIndex;
     TileMapPosition cameraP;
-    uint32_t heroFacingDirection = 0;
+
     LoadedBitmap backDrop;
     HeroBitmaps heroBitmaps[4];
+    uint32_t playerIndexForController[ARRAY_COUNT(((GameInput*)0)->controllers)];
+    uint32_t entityCount;
+    Entity entities[256];
 };
 
 #define pushStruct(arena, type) (type *)pushSize_(arena,sizeof(type))
@@ -162,6 +181,7 @@ void *pushSize_(MemoryArena *arena, size_t size)
     arena->used += size;
     return result;
 }
+
 
 #define HANDMADE_H
 #endif

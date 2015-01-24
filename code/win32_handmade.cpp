@@ -765,7 +765,9 @@ static void win32ProcessPendingMessages(
                                 OutputDebugStringA("Pressed RIGHT\n");
                                 break;
                             case VK_SPACE:
-                                OutputDebugStringA("Pressed SPACE\n");
+                                win32ProcessKeyboardMessage(&keyboardController
+                                        ->start,isDown);
+                                OutputDebugStringA("Pressed DOWN\n");
                                 break;
                             case VK_ESCAPE:
                                 OutputDebugStringA("Pressed ESC\n");

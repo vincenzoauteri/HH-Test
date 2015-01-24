@@ -164,13 +164,13 @@ void gameOutputSound(SoundBuffer *soundBuffer)
 
 
 static void drawRect(FrameBuffer *buffer, 
-        float fMinX, float fMinY, float fMaxX, float fMaxY,
+        V2 fMin,V2 fMax,
         float R, float G, float B)
 {
-    int32_t minX = roundFloatToInt(fMinX);
-    int32_t minY = roundFloatToInt(fMinY);
-    int32_t maxX = roundFloatToInt(fMaxX);
-    int32_t maxY = roundFloatToInt(fMaxY);
+    int32_t minX = roundFloatToInt(fMin.x);
+    int32_t minY = roundFloatToInt(fMin.y);
+    int32_t maxX = roundFloatToInt(fMax.x);
+    int32_t maxY = roundFloatToInt(fMax.y);
 
     if (minX < 0){
         minX = 0;
@@ -262,25 +262,23 @@ static LoadedBitmap DEBUGloadBMP(ThreadContext *thread,
         BitScanResult alphaShift = findLeastSignificantBit(alphaMask); 
 
         for(int32_t y = 0;
-            y < header->height;
-            ++y)
+                y < header->height;
+                ++y)
         {
             for(int32_t x = 0;
-                x < header->width;
-                ++x)
+                    x < header->width;
+                    ++x)
             {
                 uint32_t cc= *pixels;
                 *pixels++ = ((((cc >> alphaShift.index) & 0xff) << 24) |
                         (((cc >> redShift.index) & 0xff) << 16) | 
                         (((cc >> greenShift.index) & 0xff) << 8) |
                         ((cc >> blueShift.index) & 0xFF));
+            }
         }
-    }
     }
     return result;
 }
-
-
 
 static void drawBitmap(FrameBuffer *buffer, 
         LoadedBitmap *bitmap, 
@@ -304,7 +302,7 @@ static void drawBitmap(FrameBuffer *buffer,
     }
     int32_t sourceOffsetY = 0;
     if (minY < 0){
-		sourceOffsetY = -minY;
+        sourceOffsetY = -minY;
         minY = 0;
     }
     if (maxX > buffer->width){
@@ -343,12 +341,269 @@ static void drawBitmap(FrameBuffer *buffer,
                     ((uint32_t) (B + 0.5f) << 0));
             dest++;
             source++;
-
-
         }
         destRow += buffer->pitch;
         sourceRow -= bitmap->width;
     }
+}
+
+static bool32 testWall(float wallX, 
+        float relX, float relY,
+        float playerDeltaX, float playerDeltaY,
+        float *tMin, float minY, float maxY)
+{
+    bool32 hit = false;
+    float epsilon = 0.00001f;
+    if (playerDeltaX != 0.0f){
+
+        float tResult = (wallX - relX) / playerDeltaX; 
+        float y = relY + tResult*playerDeltaY;
+
+        if ((tResult >= 0.0f) && (*tMin > tResult)){
+
+            if (y>= minY && y<=maxY){
+                *tMin = MAX(0.0f,tResult - epsilon);
+                hit = true;
+            }
+        }
+    }
+    return hit;
+}
+
+static void movePlayer(GameState *gameState, Entity *entity, float dt, V2 ddPlayer)
+{
+
+    TileMap *tileMap = gameState->world->tileMap;
+    float vectorLength = lengthSq(ddPlayer);
+
+    if (vectorLength > 1.0f) {
+        ddPlayer *= (1.0f/squareRoot(vectorLength));
+    }
+
+    float playerSpeed = 50.0f; //m/s^jj
+    ddPlayer *= playerSpeed;
+
+    ddPlayer += entity->dP*(-8.0f);
+
+    TileMapPosition oldPlayerP = entity->position;
+
+    V2 playerDelta = (ddPlayer*0.5f*square(dt)) + 
+        entity->dP*dt; 
+
+    entity->dP += ddPlayer*dt;
+    TileMapPosition newPlayerP = offset(tileMap,oldPlayerP,playerDelta);
+
+#if 0
+    TileMapPosition newPlayerP = oldPlayerP;
+
+    //Motion with acceleration p'=1/2at^2 + vt + p
+    newPlayerP.offset += playerDelta;:w
+
+
+        //Simulate friction
+
+        //New velocity v'=at + v
+        entity->dP += ddPlayer*dt;
+
+    newPlayerP = recanonicalizePosition(tileMap,newPlayerP);
+    TileMapPosition playerLeft= newPlayerP;
+    playerLeft.offset.x -= 0.5f*entity->width;
+    playerLeft= recanonicalizePosition(tileMap,playerLeft);
+
+    TileMapPosition playerRight= newPlayerP;
+    playerRight.offset.x += 0.5f*entity->width;
+    playerRight = recanonicalizePosition(tileMap,playerRight);
+
+    bool32 collided = false; 
+    TileMapPosition colP = {};
+    if (!isTileMapPointEmpty(tileMap,newPlayerP)) {
+        colP = newPlayerP;
+        collided = true;
+    }
+    if (!isTileMapPointEmpty(tileMap,playerLeft)) {
+        colP = playerLeft;
+        collided = true;
+    }
+    if (!isTileMapPointEmpty(tileMap,playerRight)) {
+        colP = playerRight;
+        collided = true;
+    }
+
+    //Checks lower-left, lower-center and lower-right corners of 
+    //the sprite for collisions
+    if (collided) {
+        V2 r = {};
+        if (colP.absTileX > entity->position.absTileX){
+            r = V2{1,0};
+        }
+        if (colP.absTileX < entity->position.absTileX){
+            r = V2{-1,0};
+        }
+        if (colP.absTileY > entity->position.absTileY){
+            r = V2{0,1};
+        }
+        if (colP.absTileY < entity->position.absTileY){
+            r = V2{0,-1};
+        }
+        //Bounces off the wall. Inner product with the normal vector gives us
+        //bouncing direction
+        //gameState->dPlayerP =  gameState->dPlayerP - r*(3.0f*2.0f*inner(gameState->dPlayerP,r));
+        //Wall gliding
+        entity->dP += - r*inner(entity->dP,r);
+
+    } else {
+
+        entity->position = newPlayerP;
+    }
+#else
+#if 0
+    uint32_t minTileX = MIN(oldPlayerP.absTileX,newPlayerP.absTileX);
+    uint32_t minTileY = MIN(oldPlayerP.absTileY,newPlayerP.absTileY); 
+    uint32_t onePastMaxTileX = MAX(oldPlayerP.absTileX,newPlayerP.absTileX) + 1;
+    uint32_t onePastMaxTileY = MAX(oldPlayerP.absTileY,newPlayerP.absTileY) + 1 ;
+#else
+    uint32_t minTileX= MIN(oldPlayerP.absTileX, newPlayerP.absTileX);
+    uint32_t minTileY= MIN(oldPlayerP.absTileY, newPlayerP.absTileY);
+    uint32_t maxTileX= MAX(newPlayerP.absTileX, newPlayerP.absTileX);
+    uint32_t maxTileY= MAX(newPlayerP.absTileY, newPlayerP.absTileY);
+
+    uint32_t entityTileWidth = ceilFloatToInt(entity->width / tileMap->tileSizeInMeters);
+    uint32_t entityTileHeight = ceilFloatToInt(entity->height / tileMap->tileSizeInMeters);
+
+
+#endif
+
+    minTileX -= entityTileWidth;
+    minTileY -= entityTileHeight;
+    maxTileX += entityTileWidth;
+    maxTileY += entityTileHeight;
+
+    uint32_t absTileZ = entity->position.absTileZ;
+
+    float tRemaining = 1.0f; 
+
+    for(uint32_t iteration = 0;
+            (iteration < 4) && (tRemaining > 0.0f);
+            ++iteration)
+    {
+        float tMin = 1.0f;
+        V2 wallNormal = {};
+
+        for(uint32_t absTileY = minTileY;
+                absTileY <= maxTileY;
+                ++absTileY)
+        {
+            for(uint32_t absTileX = minTileX;
+                    absTileX <= maxTileX;
+                    ++absTileX)
+            {
+                TileMapPosition testTileP = centeredTilePoint(absTileX, absTileY, absTileZ);
+                uint32_t tileValue = getTileValue(tileMap,testTileP);
+
+                if (!isTileValueEmpty(tileValue)) {
+
+                    float diameterW = tileMap->tileSizeInMeters + entity->width;
+                    float diameterH = tileMap->tileSizeInMeters + entity->height;
+
+                    V2 minCorner = V2{diameterW, diameterH}*(-0.5f);
+                    V2 maxCorner = V2{diameterW, diameterH}*(0.5f);
+
+                    TileMapDifference relOldPlayerP= subtract(tileMap,
+                            &entity->position,
+                            &testTileP);
+
+                    V2 rel = relOldPlayerP.dXY;
+
+                    if (testWall(minCorner.x,rel.x, rel.y,playerDelta.x,playerDelta.y,
+                                &tMin, minCorner.y, maxCorner.y)){
+                        wallNormal = V2 {-1,0};
+                    }
+                    if (testWall(maxCorner.x,rel.x, rel.y,playerDelta.x,playerDelta.y,
+                                &tMin, minCorner.y, maxCorner.y)){
+                        wallNormal = V2 {1,0};
+                    }
+                    if (testWall(minCorner.y, rel.y,rel.x,playerDelta.y,playerDelta.x,
+                                &tMin, minCorner.x, maxCorner.x)){
+                        wallNormal = V2 {0,-1};
+                    }
+                    if (testWall(maxCorner.y, rel.y,rel.x,playerDelta.y,playerDelta.x,
+                                &tMin, minCorner.x, maxCorner.x)){
+                        wallNormal = V2 {0,1};
+                    }
+                }
+            }
+        }
+
+        entity->position = offset(tileMap, entity->position, playerDelta*tMin);
+        entity->dP = entity->dP - wallNormal*inner(entity->dP, wallNormal);
+        playerDelta = playerDelta - wallNormal*inner(playerDelta, wallNormal);
+        tRemaining -= tMin*tRemaining;
+    }
+
+#endif
+    if (!areOnSameTile(&oldPlayerP, &entity->position)) {
+
+        uint32_t newTileValue = getTileValue(tileMap, entity->position);
+
+        if (newTileValue == 3) {
+            ++entity->position.absTileZ;
+        } else if (newTileValue == 4) {
+            --entity->position.absTileZ;
+        }
+    }
+
+    if ((entity->dP.x == 0 )&& (entity->dP.y==0)){
+
+    } else if (absoluteValue(entity->dP.x) > absoluteValue(entity->dP.y)){
+
+        if (entity->dP.x > 0) {
+            entity->facingDirection= 0;
+        } else {
+            entity->facingDirection= 2;
+        }
+
+    } else { 
+
+        if (entity->dP.y > 0) {
+            entity->facingDirection= 1;
+        } else {
+            entity->facingDirection= 3;
+        }
+    }
+
+}
+
+inline Entity * getEntity(GameState *gameState, uint32_t index){
+    Entity *entity = 0;
+    if ((index > 0) && index < ARRAY_COUNT(gameState->entities)) {
+        entity = &gameState->entities[index];
+    }
+    return entity;
+}
+
+static void initPlayer(GameState *gameState, uint32_t entityIndex) {
+
+    Entity *entity = getEntity(gameState,entityIndex);
+
+    entity->exists = true;
+    entity->position.absTileX = 1;
+    entity->position.absTileY = 3;
+    entity->position.absTileZ = 0;
+    entity->position.offset_= { 0.0f, 0.0f};
+    entity->height = 0.5f;
+    entity->width = 1.0f;
+    if (!getEntity(gameState, gameState->cameraFollowingEntityIndex)){
+        gameState->cameraFollowingEntityIndex = entityIndex;
+    }
+}
+
+
+static uint32_t addEntity(GameState *gameState) {
+    uint32_t entityIndex = gameState->entityCount++;
+    Entity *entity = &gameState->entities[entityIndex];
+    *entity = {};
+    //memset((void*)entity,0,sizeof(Entity));
+    return entityIndex;
 }
 
 extern "C" GAME_UPDATE_AND_RENDER(gameUpdateAndRender) 
@@ -357,11 +612,9 @@ extern "C" GAME_UPDATE_AND_RENDER(gameUpdateAndRender)
 
     ASSERT (sizeof(*gameState) <= gameMemory->permanentStorageSize);
 
-    uint32_t tileSizeInPixels = 60;
-    float metersToPixels = 0; 
 
     if (!gameMemory->isInitialized){
-
+        addEntity(gameState);
         gameState->backDrop = DEBUGloadBMP(context, 
                 gameMemory->DEBUGReadEntireFile,
                 "test/test_background.bmp");
@@ -422,14 +675,6 @@ extern "C" GAME_UPDATE_AND_RENDER(gameUpdateAndRender)
         gameState->cameraP.absTileX = 17/2;
         gameState->cameraP.absTileY = 9/2;
 
-        gameState->playerP.absTileX = 1;
-        gameState->playerP.absTileY = 3;
-        gameState->playerP.absTileZ = 0;
-        gameState->playerP.offsetX= 5.0f;
-        gameState->playerP.offsetY= 5.0f; 
-
-        const int TILE_MAP_COUNT_X = 256;
-        const int TILE_MAP_COUNT_Y = 256;
 
         iniatilizeArena(&gameState->worldArena, 
                 gameMemory->permanentStorageSize - sizeof(GameState),
@@ -446,7 +691,6 @@ extern "C" GAME_UPDATE_AND_RENDER(gameUpdateAndRender)
         tileMap->tileChunkCountX = 128;
         tileMap->tileChunkCountY = 128;
         tileMap->tileChunkCountZ = 2;
-        tileMap->tileSizeInMeters = 1.4f;
 
         tileMap->tileChunks = pushArray(&gameState->worldArena, 
                 tileMap->tileChunkCountX* 
@@ -454,13 +698,18 @@ extern "C" GAME_UPDATE_AND_RENDER(gameUpdateAndRender)
                 tileMap->tileChunkCountZ, 
                 TileChunk); 
 
-        metersToPixels =  (float)tileSizeInPixels/tileMap->tileSizeInMeters;
+        tileMap->tileSizeInMeters = 1.4f;
 
 
         uint32_t tilesPerWidth = 17;
         uint32_t tilesPerHeight = 9;
+#if 0 
+        uint32_t screenX = INT32_MAX/2;
+        uint32_t screenY = INT32_MAX/2;
+#else
         uint32_t screenX = 0;
         uint32_t screenY = 0;
+#endif
         uint32_t randomNumberIndex = 0; 
 
         bool32 doorLeft = false;
@@ -575,13 +824,11 @@ extern "C" GAME_UPDATE_AND_RENDER(gameUpdateAndRender)
         }
         gameMemory->isInitialized = true;
     }
-
-    float playerHeight = 1.4f;
-    float playerWidth = 0.75f*playerHeight;
-
     World *world = gameState->world;
     TileMap *tileMap = world->tileMap;
-    metersToPixels =  (float)tileSizeInPixels/tileMap->tileSizeInMeters;
+
+    int32_t tileSizeInPixels = 60;
+    float metersToPixels =  (float)tileSizeInPixels/tileMap->tileSizeInMeters;
 
 
     for (int controllerIndex=0;
@@ -590,191 +837,181 @@ extern "C" GAME_UPDATE_AND_RENDER(gameUpdateAndRender)
 
         GameControllerInput *controller = 
             getController(gameInput,controllerIndex);
-        if (controller->isAnalog) {
-        } else  {
-            float dPlayerY = 0.0f;
-            float dPlayerX = 0.0f;
-            if (controller->moveUp.endedDown) {
-                dPlayerY = 1.0f;
-                gameState->heroFacingDirection = 1;
-            }
-            if (controller->moveDown.endedDown) {
-                dPlayerY = -1.0f;
-                gameState->heroFacingDirection = 3;
-            }
-            if (controller->moveLeft.endedDown) {
-                dPlayerX = -1.0f;
-                gameState->heroFacingDirection = 2;
-            }
-            if (controller->moveRight.endedDown) {
-                dPlayerX = 1.0f;
-                gameState->heroFacingDirection = 0;
-            }                                     
 
-            float playerSpeed = 2.0f;
-            if (controller->actionUp.endedDown) {
-                playerSpeed = 10.0f;
-            } 
+        Entity * controllingEntity = getEntity(gameState, 
+                gameState->playerIndexForController[controllerIndex]);
 
-            dPlayerX *= playerSpeed;
-            dPlayerY *= playerSpeed;
+        if (controllingEntity){
+            V2 ddPlayer = {};
 
-            TileMapPosition newPlayerP = gameState->playerP;
-            newPlayerP.offsetX += (gameInput->dtForFrame*dPlayerX);
-            newPlayerP.offsetY += (gameInput->dtForFrame*dPlayerY);
-            newPlayerP = recanonicalizePosition(tileMap,newPlayerP);
+            if (controller->isAnalog) {
+                ddPlayer = v2(controller->stickAverageX,controller->stickAverageY);
+            } else  {
 
-            TileMapPosition playerLeft = newPlayerP;
-            playerLeft.offsetX -= 0.5f*playerWidth;
-            playerLeft= recanonicalizePosition(tileMap,playerLeft);
-
-            TileMapPosition playerRight= newPlayerP;
-            playerRight.offsetX += 0.5f*playerWidth;
-            playerRight = recanonicalizePosition(tileMap,playerRight);
-
-            //Checks lower-left, lower-center and lower-right corners of 
-            //the sprite for collisions
-            if (isTileMapPointEmpty(tileMap, newPlayerP) && 
-                    isTileMapPointEmpty(tileMap,playerLeft) && 
-                    isTileMapPointEmpty(tileMap,playerRight)) {
-
-                if (!areOnSameTile(&gameState->playerP, &newPlayerP)) {
-                    uint32_t newTileValue = getTileValue(tileMap, newPlayerP);
-                    if (newTileValue == 3) {
-                        ++newPlayerP.absTileZ;
-                    } else if (newTileValue == 4) {
-                        --newPlayerP.absTileZ;
-                    }
+                if (controller->moveUp.endedDown) {
+                    ddPlayer.y = 1.0f;
                 }
-                gameState->playerP = newPlayerP;
-            } else {
-            }
-
-            gameState->cameraP.absTileZ = gameState->playerP.absTileZ;
-
-            TileMapDifference diff = subtract(tileMap,
-                    &gameState->playerP,
-                    &gameState->cameraP);
-
-            if (diff.dX > (9.0f*tileMap->tileSizeInMeters)){
-                gameState->cameraP.absTileX += 17 ;
-            }
-            if (diff.dX < -(9.0f*tileMap->tileSizeInMeters)){
-                gameState->cameraP.absTileX -= 17 ;
-            }
-            if (diff.dY > (5.0f*tileMap->tileSizeInMeters)){
-                gameState->cameraP.absTileY += 9 ;
-            }
-            if (diff.dY < -(5.0f*tileMap->tileSizeInMeters)){
-                gameState->cameraP.absTileY -= 9 ;
-            }
-        }
-        }
-
-        //drawRect(buffer,0.0f,0.0f,(float)buffer->width
-        //        ,(float)buffer->height,1.0f,0.0f,0.1f);
-
-        drawBitmap(buffer, &gameState->backDrop, 0,0);
-
-        float screenCenterX = 0.5f *(float)buffer->width;
-        float screenCenterY = 0.5f *(float)buffer->height;
-
-        for (int32_t relRow= -10; 
-                relRow <  10;
-                ++relRow) {
-            for (int32_t relColumn= -20;
-                    relColumn < 20;
-                    ++relColumn ) {
-
-                uint32_t column = relColumn + gameState->cameraP.absTileX;
-                uint32_t row = relRow + gameState->cameraP.absTileY;
-
-                uint32_t tileValue = getTileValue(tileMap,
-                        column,
-                        row,
-                        gameState->cameraP.absTileZ);
-
-                float gray = 0.0f;
-                if (tileValue > 1) {
-                    switch (tileValue) {
-                        case 1:
-                            gray = 0.5f;
-                            break;
-                        case 2:
-                            gray = 1.0f;
-                            break;
-                        case 3:
-                            gray = 0.75f;
-                            break;
-                        case 4:
-                            gray = 0.25f;
-                            break;
-                        default: 
-                            gray = 0.0f;
-                            break;
-                    }
-
-                    float tileCenterX = screenCenterX - 
-                        metersToPixels*gameState->cameraP.offsetX + 
-                        ((float)relColumn)*tileSizeInPixels; 
-                    float tileCenterY= screenCenterY+ 
-                        metersToPixels*gameState->cameraP.offsetY - 
-                        ((float)relRow)*tileSizeInPixels; 
-                    float minX = tileCenterX - 0.5f*tileSizeInPixels; 
-                    float minY = tileCenterY - 0.5f*tileSizeInPixels; 
-
-                    float maxX =  tileCenterX + 0.5f * tileSizeInPixels; 
-                    float maxY =  tileCenterY + 0.5f * tileSizeInPixels; 
-
-
-                    drawRect(buffer,minX,minY,maxX,maxY,gray,gray,gray);
+                if (controller->moveDown.endedDown) {
+                    ddPlayer.y = -1.0f;
                 }
+                if (controller->moveLeft.endedDown) {
+                    ddPlayer.x = -1.0f;
+                }
+                if (controller->moveRight.endedDown) {
+                    ddPlayer.x = 1.0f;
+                }                                     
+            }
+
+            movePlayer(gameState, controllingEntity, gameInput->dtForFrame, ddPlayer);
+
+        } else{ 
+            if (controller->start.endedDown) {
+                uint32_t entityIndex = addEntity(gameState);
+                initPlayer(gameState, entityIndex);
+                gameState->playerIndexForController[controllerIndex] = entityIndex;
             }
         }
-        TileMapDifference diff = subtract(tileMap,&gameState->playerP, &gameState->cameraP);
 
-        float playerR = 1.0f;
-        float playerG = 1.0f;
-        float playerB = 0.0f;
-
-        float playerGroundPointX = screenCenterX
-            + metersToPixels*diff.dX;
-        float playerGroundPointY = screenCenterY
-            - metersToPixels*diff.dY;
-
-        float playerLeft = playerGroundPointX-  
-            0.5f*metersToPixels*playerWidth;
-        float playerTop = playerGroundPointY-
-            metersToPixels*playerHeight;
-
-        drawRect(buffer,
-                playerLeft, playerTop,
-                playerLeft + metersToPixels*playerWidth,
-                playerTop + metersToPixels*playerHeight,
-                playerR,playerG,playerB);
-
-        HeroBitmaps *heroBitmaps = &gameState->heroBitmaps[gameState->heroFacingDirection];
-
-        drawBitmap(buffer, 
-                &heroBitmaps->torso,
-                playerGroundPointX, 
-                playerGroundPointY,
-                heroBitmaps->alignX,
-                heroBitmaps->alignY);
-        drawBitmap(buffer, 
-                &heroBitmaps->cape,
-                playerGroundPointX, 
-                playerGroundPointY,
-                heroBitmaps->alignX,
-                heroBitmaps->alignY);
-        drawBitmap(buffer, 
-                &heroBitmaps->head,
-                playerGroundPointX, 
-                playerGroundPointY,
-                heroBitmaps->alignX,
-                heroBitmaps->alignY);
     }
 
+    Entity *cameraFollowingEntity = getEntity(gameState, gameState->cameraFollowingEntityIndex);
+
+    if (cameraFollowingEntity){
+        gameState->cameraP.absTileZ = cameraFollowingEntity->position.absTileZ;
+
+        TileMapDifference diff = subtract(tileMap,
+                &cameraFollowingEntity->position,
+                &gameState->cameraP);
+
+        if (diff.dXY.x > (9.0f*tileMap->tileSizeInMeters)){
+            gameState->cameraP.absTileX += 17 ;
+        }
+        if (diff.dXY.x < -(9.0f*tileMap->tileSizeInMeters)){
+            gameState->cameraP.absTileX -= 17 ;
+        }
+        if (diff.dXY.y > (5.0f*tileMap->tileSizeInMeters)){
+            gameState->cameraP.absTileY += 9 ;
+        }
+        if (diff.dXY.y < -(5.0f*tileMap->tileSizeInMeters)){
+            gameState->cameraP.absTileY -= 9 ;
+        }
+
+    }
+    //drawRect(buffer,0.0f,0.0f,(float)buffer->width
+    //        ,(float)buffer->height,1.0f,0.0f,0.1f);
+
+    drawBitmap(buffer, &gameState->backDrop, 0,0);
+
+    float screenCenterX = 0.5f *(float)buffer->width;
+    float screenCenterY = 0.5f *(float)buffer->height;
+
+    for (int32_t relRow= -10; 
+            relRow <  10;
+            ++relRow) {
+        for (int32_t relColumn= -20;
+                relColumn < 20;
+                ++relColumn ) {
+
+            uint32_t column = relColumn + gameState->cameraP.absTileX;
+            uint32_t row = relRow + gameState->cameraP.absTileY;
+
+            uint32_t tileValue = getTileValue(tileMap,
+                    column,
+                    row,
+                    gameState->cameraP.absTileZ);
+
+            if (tileValue > 1) {
+                float gray = 0.0f;
+                switch (tileValue) {
+                    case 1:
+                        gray = 0.5f;
+                        break;
+                    case 2:
+                        gray = 1.0f;
+                        break;
+                    case 3:
+                        gray = 0.75f;
+                        break;
+                    case 4:
+                        gray = 0.25f;
+                        break;
+                    default: 
+                        gray = 0.0f;
+                        break;
+                }
+
+                V2 tileSizeInPixelsVec = { tileSizeInPixels*0.5f, tileSizeInPixels*0.5f };
+                V2 tileCenter = { screenCenterX - 
+                    metersToPixels*gameState->cameraP.offset_.x + 
+                        ((float)relColumn)*tileSizeInPixels, 
+
+                        screenCenterY+ 
+                            metersToPixels*gameState->cameraP.offset_.y - 
+                            ((float)relRow)*tileSizeInPixels}; 
+
+                V2 min = tileCenter - tileSizeInPixelsVec ; 
+
+                V2 max =  tileCenter + tileSizeInPixelsVec ; 
+
+
+                drawRect(buffer,min,max,gray,gray,gray);
+            }
+        }
+    }
+
+    Entity *entity = gameState->entities;
+    for (uint32_t entityIndex = 0;
+            entityIndex < gameState->entityCount;
+            ++entityIndex,++entity){
+
+        if (entity->exists) {
+            TileMapDifference diff = subtract(tileMap, &entity->position, &gameState->cameraP);
+
+            float playerR = 1.0f;
+            float playerG = 1.0f;
+            float playerB = 0.0f;
+
+            float playerGroundPointX = screenCenterX
+                + metersToPixels*diff.dXY.x;
+            float playerGroundPointY = screenCenterY
+                - metersToPixels*diff.dXY.y;
+
+            V2 playerLeftTop  = {
+                playerGroundPointX - 0.5f*metersToPixels*entity->width,
+                playerGroundPointY - 0.5f*metersToPixels*entity->height};
+
+            V2  playerWidthHeight = {entity->width, entity->height};
+
+            drawRect(buffer,
+                    playerLeftTop,
+                    playerLeftTop + (playerWidthHeight*metersToPixels),
+                    playerR,playerG,playerB);
+
+            HeroBitmaps *heroBitmaps = &gameState->heroBitmaps[entity->facingDirection];
+
+            drawBitmap(buffer, 
+                    &heroBitmaps->torso,
+                    playerGroundPointX,
+                    playerGroundPointY,
+                    heroBitmaps->alignX,
+                    heroBitmaps->alignY);
+
+            drawBitmap(buffer, 
+                    &heroBitmaps->cape,
+                    playerGroundPointX, 
+                    playerGroundPointY,
+                    heroBitmaps->alignX,
+                    heroBitmaps->alignY);
+
+            drawBitmap(buffer, 
+                    &heroBitmaps->head,
+                    playerGroundPointX, 
+                    playerGroundPointY,
+                    heroBitmaps->alignX,
+                    heroBitmaps->alignY);
+        }
+    }
+}
 
 
 extern "C" GAME_GET_SOUND_SAMPLES(gameGetSoundSamples)

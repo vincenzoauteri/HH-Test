@@ -1,8 +1,25 @@
 #include <math.h>
+inline float squareRoot(float floatNumber) {
+    return sqrtf(floatNumber);
+}
+
+inline int32_t signOf(int32_t value) {
+    int32_t result = (value >= 0) ? 1 : -1; 
+    return result;
+}
+
+inline float absoluteValue(float floatNumber) {
+    return fabs(floatNumber);
+}
+
 inline int32_t roundFloatToInt(float floatNumber) 
 {
     int32_t result= (int32_t) roundf(floatNumber);
     return result;
+}
+
+inline uint32_t ceilFloatToInt(float floatNumber) {
+    return(uint32_t) ceilf(floatNumber);
 }
 
 inline int32_t floorFloatToInt(float floatNumber) 
