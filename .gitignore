@@ -63,3 +63,7 @@ build/handmade.exp
 *.hmi
 *.idb
 *.map
+casey/*
+build/*
+test/*
+out

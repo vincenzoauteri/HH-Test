@@ -95,14 +95,19 @@ static uint32_t getTileValue(TileMap *tileMap,  TileMapPosition pos)
     return tileChunkValue;
 }
 
+static bool32 isTileValueEmpty(uint32_t tileValue)  
+{
+    return (tileValue== 1 || 
+            tileValue== 3 ||
+            tileValue== 4); 
+}
+
 static bool32 isTileMapPointEmpty(TileMap *tileMap, 
         TileMapPosition pos)
 {
     uint32_t tileChunkValue = getTileValue(tileMap, pos); 
 
-    return (tileChunkValue == 1 || 
-            tileChunkValue == 3 ||
-            tileChunkValue == 4); 
+    return isTileValueEmpty(tileChunkValue); 
 }
 
 inline void setTileValueUnchecked(TileMap *tileMap,
@@ -176,16 +181,16 @@ inline void recanonicalizeCoord(TileMap *tileMap,
     int32_t offset = roundFloatToInt(*tileRel / tileMap->tileSizeInMeters); 
     *tile += offset;
     *tileRel -= offset*tileMap->tileSizeInMeters;
-    ASSERT(*tileRel >= -0.5f * tileMap->tileSizeInMeters);
-    ASSERT(*tileRel <= 0.5 * tileMap->tileSizeInMeters);
+    //ASSERT(*tileRel >= -0.5f * tileMap->tileSizeInMeters);
+    //ASSERT(*tileRel <= 0.5 * tileMap->tileSizeInMeters);
 }
 
 
 inline TileMapPosition recanonicalizePosition(TileMap *tileMap, TileMapPosition pos) 
 {
     TileMapPosition result = pos;
-    recanonicalizeCoord(tileMap, &result.absTileX, &result.offsetX);
-    recanonicalizeCoord(tileMap, &result.absTileY, &result.offsetY);
+    recanonicalizeCoord(tileMap, &result.absTileX, &result.offset_.x);
+    recanonicalizeCoord(tileMap, &result.absTileY, &result.offset_.y);
 
     return result;
 }
@@ -206,16 +211,31 @@ inline bool32 areOnSameTile(TileMapPosition *a, TileMapPosition *b)
     return result;
 }
 
+inline TileMapPosition centeredTilePoint(
+        uint32_t absTileX, 
+        uint32_t absTileY,
+        uint32_t absTileZ) 
+{
+    TileMapPosition  result  = {};
+    result.absTileX = absTileX;
+    result.absTileY = absTileY;
+    result.absTileZ = absTileZ;
+    return result;
+}
+
 inline TileMapDifference subtract(TileMap *tileMap, TileMapPosition *a, TileMapPosition *b) 
 {
     TileMapDifference result;
 
-    float dTileX = (float)a->absTileX - (float)b->absTileX;
-    float dTileY = (float)a->absTileY - (float)b->absTileY;
-    float dTileZ = (float)a->absTileZ - (float)b->absTileZ;
+    V2 dTileXY = {(float)a->absTileX - (float)b->absTileX,
+        (float)a->absTileY - (float)b->absTileY};
 
-    result.dX = tileMap->tileSizeInMeters * dTileX + (a->offsetX - b->offsetY); 
-    result.dY = tileMap->tileSizeInMeters * dTileY + (a->offsetY - b->offsetY); 
-    result.dZ =  tileMap->tileSizeInMeters * dTileZ ;
+    result.dXY =   (dTileXY * tileMap->tileSizeInMeters) + (a->offset_ - b->offset_); 
+    result.dZ = (float)a->absTileZ - (float)b->absTileZ;
     return result;
+}
+inline TileMapPosition offset(TileMap *tileMap, TileMapPosition pos,V2 offset){
+    pos.offset_ += offset;
+    pos = recanonicalizePosition(tileMap,pos);
+    return pos;
 }
